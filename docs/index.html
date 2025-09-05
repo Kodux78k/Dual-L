@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="pt-br" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>Dual Launcher v3 — Editor • Nebula • Conectores</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b0e14">
+<style>
+  :root{
+    --bg:#0b0e14; --txt:#EAF2FF; --muted:#9fb1cc; --stroke:rgba(255,255,255,.12);
+    --a:#29d3ff; --b:#8a5cff; --ok:#2fe66a; --err:#ff4d6d;
+    --r:18px; --shadow:0 16px 60px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{margin:0;background:
+    radial-gradient(1200px 700px at 20% -10%, rgba(41,211,255,.18), transparent 60%),
+    radial-gradient(1400px 900px at 120% 120%, rgba(138,92,255,.16), transparent 60%),
+    #0b0e14; color:var(--txt); font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif}
+  .wrap{min-height:100%; display:grid; grid-template-rows:auto auto 1fr auto; gap:12px; padding:14px}
+  header{display:flex; align-items:center; justify-content:space-between; gap:10px}
+  .brand{display:flex; align-items:center; gap:10px}
+  .logo{width:40px;height:40px;border-radius:14px;background:conic-gradient(from 0deg, var(--a), var(--b), var(--a));
+        box-shadow:0 0 0 2px var(--stroke) inset, 0 8px 22px rgba(0,0,0,.5)}
+  .title{font-weight:900; letter-spacing:.3px}
+  .tabs{display:flex; gap:8px; overflow:auto}
+  .tab{padding:10px 12px; border:1px solid var(--stroke); border-radius:999px;
+       background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03)); cursor:pointer; white-space:nowrap}
+  .tab.sel{outline:2px solid var(--a)}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)); border:1px solid var(--stroke); border-radius:var(--r); box-shadow:var(--shadow)}
+  .hd{padding:12px 14px; border-bottom:1px solid var(--stroke); display:flex; align-items:center; justify-content:space-between}
+  .bd{padding:12px 14px}
+  .btn{appearance:none;border:1px solid var(--stroke);background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+       padding:10px 12px;border-radius:14px;color:var(--txt);font-weight:700;letter-spacing:.2px;transition:.2s;cursor:pointer}
+  .btn:active{transform:translateY(1px)}
+  .btn.ok{border-color:rgba(47,230,106,.25)}
+  .grid{display:grid; gap:10px}
+  .cols-2{grid-template-columns:1fr 1fr}
+  .console{background:#0a111f;border:1px solid #0b1d38;border-radius:14px;padding:10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'JetBrains Mono'; font-size:12px; max-height:220px; overflow:auto}
+  .line{display:flex; gap:8px; margin:2px 0}
+  .tag{padding:2px 8px;border-radius:8px;border:1px solid var(--stroke);font-size:11px;color:#a3b7d9;background:rgba(255,255,255,.03)}
+  .val{white-space:pre-wrap; word-wrap:break-word}
+  footer{opacity:.7; font-size:12px; text-align:center; padding-bottom:8px}
+  /* Editor */
+  #editorView{display:grid; gap:10px}
+  .split{display:grid; gap:10px; grid-template-columns:1fr;}
+  @media(min-width:860px){ .split{grid-template-columns:1fr 1fr} }
+  #cm{height:52vh; border:1px solid var(--stroke); border-radius:12px; overflow:hidden}
+  #previewWrap{height:52vh; border:1px solid var(--stroke); border-radius:12px; overflow:hidden; position:relative}
+  #preview{width:100%;height:100%;border:0;background:#0a111f}
+  .badge{border:1px dashed var(--stroke);padding:4px 8px;border-radius:999px;font-size:12px;color:#9fb1cc}
+  .fullbtn{position:absolute; right:8px; top:8px}
+  /* Nebula */
+  .center{display:grid;place-items:center}
+  .bigBtn{display:grid;place-items:center;width:120px;height:120px;border-radius:999px;border:1px solid var(--stroke);
+          background:radial-gradient(60px 60px at 50% 50%, rgba(41,211,255,.18), rgba(138,92,255,.12) 60%, transparent 62%),
+          linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+          box-shadow:0 0 0 6px rgba(41,211,255,.08), inset 0 0 40px rgba(138,92,255,.16); font-weight:900; letter-spacing:.3px}
+  .icons{display:grid; gap:10px; grid-template-columns:repeat(3,1fr)}
+  @media(min-width:460px){ .icons{grid-template-columns:repeat(4,1fr)} }
+  .ico{display:grid; place-items:center; gap:6px; padding:12px; border:1px solid var(--stroke); border-radius:18px;
+       background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03)); cursor:pointer; transition:.2s}
+  .ico.sel{outline:2px solid var(--a); box-shadow:0 0 0 6px rgba(41,211,255,.1)}
+  .ico .glyph{font-size:28px}
+  .ico .name{font-size:12px; opacity:.85}
+  /* Conectores sub-tabs */
+  .subtabs{display:flex; gap:8px; margin-bottom:8px; overflow:auto}
+  .subtab{padding:8px 10px;border:1px solid var(--stroke);border-radius:999px;background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));cursor:pointer}
+  .subtab.sel{outline:2px solid var(--a)}
+  .fld{display:grid; gap:6px}
+  input, textarea, select{width:100%; background:rgba(255,255,255,.04); border:1px solid var(--stroke); border-radius:12px; color:var(--txt); padding:10px 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'JetBrains Mono'; font-size:13px}
+  textarea{min-height:80px; resize:vertical}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <div class="title">Dual Launcher v3</div>
+        <div style="opacity:.7;font-size:12px">Editor • Nebula • Conectores (PWA)</div>
+      </div>
+    </div>
+    <div class="tabs" id="tabs">
+      <div class="tab sel" data-tab="editor">Editor</div>
+      <div class="tab" data-tab="nebula">Validar UI (Nebula)</div>
+      <div class="tab" data-tab="conns">Conectores</div>
+    </div>
+  </header>
+
+  <!-- Editor -->
+  <section class="card" id="pane-editor">
+    <div class="hd">
+      <b>Editor HTML</b>
+      <div class="grid" style="grid-auto-flow:column;gap:8px;align-items:center">
+        <input type="file" id="fileInput" accept=".html,.htm" multiple style="display:none" />
+        <button class="btn" id="btnNew">＋ Página</button>
+        <button class="btn" id="btnUpload">⬆️ Upload</button>
+        <button class="btn" id="btnFetch">🔗 Buscar URL</button>
+        <button class="btn" id="btnSave">💾 Salvar</button>
+        <button class="btn" id="btnExport">⇪ Exportar .html</button>
+        <span class="badge" id="badgeMode">Live Preview: scripts ON</span>
+        <button class="btn" id="btnSafe">🛡 Safe (OFF)</button>
+      </div>
+    </div>
+    <div class="bd">
+      <div id="tabsPages" class="tabs"></div>
+      <div class="split">
+        <div id="cm"></div>
+        <div id="previewWrap">
+          <iframe id="preview" sandbox="allow-scripts allow-same-origin"></iframe>
+          <button class="btn fullbtn" id="btnFull">⛶ Tela Cheia</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Nebula -->
+  <section class="card" id="pane-nebula" style="display:none">
+    <div class="hd">
+      <b>Nebula Unified</b>
+      <div class="grid" style="grid-auto-flow:column;gap:8px;align-items:center">
+        <button class="btn" id="btnTheme">🌈 Tema</button>
+        <span class="badge" id="badgeTheme">Tema: Dark</span>
+        <span class="badge" id="badgeMode2">Modo: Nuvem (n8n)</span>
+      </div>
+    </div>
+    <div class="bd grid" style="grid-template-columns:1fr">
+      <div class="grid icons" id="icons">
+        <div class="ico" data-name="Nova"><div class="glyph">✨</div><div class="name">Nova</div></div>
+        <div class="ico" data-name="Elysha"><div class="glyph">🔮</div><div class="name">Elysha</div></div>
+        <div class="ico" data-name="Kaion"><div class="glyph">⚙️</div><div class="name">Kaion</div></div>
+        <div class="ico" data-name="Ignyra"><div class="glyph">🔥</div><div class="name">Ignyra</div></div>
+        <div class="ico" data-name="Luxara"><div class="glyph">🌟</div><div class="name">Luxara</div></div>
+        <div class="ico" data-name="Atlas"><div class="glyph">🗺️</div><div class="name">Atlas</div></div>
+        <div class="ico" data-name="Artemis"><div class="glyph">🎯</div><div class="name">Artemis</div></div>
+        <div class="ico" data-name="Serena"><div class="glyph">🌊</div><div class="name">Serena</div></div>
+        <div class="ico" data-name="Vitalis"><div class="glyph">🌱</div><div class="name">Vitalis</div></div>
+        <div class="ico" data-name="Aion"><div class="glyph">⏳</div><div class="name">Aion</div></div>
+        <div class="ico" data-name="Genus"><div class="glyph">🧬</div><div class="name">Genus</div></div>
+        <div class="ico" data-name="Rhea"><div class="glyph">🕊️</div><div class="name">Rhea</div></div>
+      </div>
+      <div class="grid" style="grid-template-columns:1fr 1fr">
+        <div class="fld">
+          <label>INTENÇÃO</label>
+          <select id="iIntent">
+            <option>TTS</option><option>RAG</option><option>MISSAO</option><option>ASR</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label>UNO/DUAL/TRINITY</label>
+          <select id="iUDT"><option>UNO</option><option>DUAL</option><option>TRINITY</option></select>
+        </div>
+        <div class="fld" style="grid-column:1/-1">
+          <label>Texto | (ASR usa URL de áudio em input)</label>
+          <textarea id="iText" placeholder="Diga ao Dual..."></textarea>
+        </div>
+      </div>
+      <div class="center" style="margin:12px 0 14px">
+        <button class="bigBtn" id="btnRun">◉</button>
+      </div>
+      <div class="console" id="console2"></div>
+      <div class="card" style="margin-top:10px">
+        <div class="hd"><b>Saída</b></div>
+        <div class="bd" id="out2" style="color:#b6ffd0"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Conectores -->
+  <section class="card" id="pane-conns" style="display:none">
+    <div class="hd"><b>Conectores (n8n / Servidor)</b></div>
+    <div class="bd">
+      <div class="subtabs" id="subtabs">
+        <div class="subtab sel" data-stab="endpoints">Endpoints</div>
+        <div class="subtab" data-stab="credenciais">Credenciais</div>
+        <div class="subtab" data-stab="voiceids">Voice IDs</div>
+        <div class="subtab" data-stab="workflow">Workflow (Importar/Gerar/Enviar)</div>
+      </div>
+
+      <!-- Endpoints -->
+      <div id="stab-endpoints">
+        <div class="grid cols-2">
+          <div class="fld">
+            <label>Modo de Execução</label>
+            <select id="iMode">
+              <option value="nuvem" selected>Nuvem (n8n)</option>
+              <option value="local">Local (WASM)</option>
+              <option value="neural">Neural (Servidor)</option>
+            </select>
+          </div>
+          <div class="fld">
+            <label>URL de Áudio (ASR)</label>
+            <input id="iAudioUrl" placeholder="https://.../audio.mp3">
+          </div>
+          <div class="fld">
+            <label>Endpoint n8n (Webhook)</label>
+            <input id="iN8n" placeholder="https://SEU-N8N/webhook/dual">
+          </div>
+          <div class="fld">
+            <label>Endpoint Servidor Python</label>
+            <input id="iSrv" placeholder="https://SEU-SERVIDOR/api/dual">
+          </div>
+          <div class="grid" style="grid-auto-flow:column;gap:8px">
+            <button class="btn" id="btnSaveConns">💾 Salvar</button>
+            <button class="btn" id="btnResetConns">↺ Reset</button>
+            <button class="btn" id="btnPing">🔎 Testar</button>
+          </div>
+          <div class="console" id="console3"></div>
+        </div>
+      </div>
+
+      <!-- Credenciais -->
+      <div id="stab-credenciais" style="display:none">
+        <div class="grid cols-2">
+          <div class="fld">
+            <label>ElevenLabs — xi-api-key</label>
+            <input id="credEleven" placeholder="ex.: xi-xxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+          </div>
+          <div class="fld">
+            <label>Deepgram — Token</label>
+            <input id="credDeepgram" placeholder="ex.: dg-xxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+          </div>
+        </div>
+        <div class="grid" style="grid-auto-flow:column;gap:8px;margin-top:8px">
+          <button class="btn" id="btnSaveCreds">💾 Salvar Credenciais</button>
+          <button class="btn" id="btnClearCreds">🧹 Limpar</button>
+        </div>
+      </div>
+
+      <!-- Voice IDs -->
+      <div id="stab-voiceids" style="display:none">
+        <div class="grid cols-2" id="voiceGrid"></div>
+        <div class="grid" style="grid-auto-flow:column;gap:8px;margin-top:8px">
+          <button class="btn" id="btnSaveVoice">💾 Salvar Voice IDs</button>
+          <button class="btn" id="btnClearVoice">🧹 Limpar</button>
+        </div>
+      </div>
+
+      <!-- Workflow -->
+      <div id="stab-workflow" style="display:none">
+        <div class="grid cols-2">
+          <div class="fld">
+            <label>Importar via URL (JSON n8n)</label>
+            <input id="wfUrl" placeholder="https://.../dual_webhook_router_http_voiceids.json">
+          </div>
+          <div class="fld">
+            <label>Importar via arquivo</label>
+            <input id="wfFile" type="file" accept=".json">
+          </div>
+          <div class="fld">
+            <label>Base URL da API do n8n</label>
+            <input id="apiBase" placeholder="https://SEU-N8N/rest">
+          </div>
+          <div class="fld">
+            <label>Método de Autenticação</label>
+            <select id="authMethod">
+              <option value="apiKey">API Key (X-N8N-API-KEY)</option>
+              <option value="bearer">Bearer Token (Authorization)</option>
+            </select>
+          </div>
+          <div class="fld">
+            <label>API Key (ou Token)</label>
+            <input id="apiKey" placeholder="cole aqui sua chave/token">
+          </div>
+          <div class="fld">
+            <label>Nome do Workflow (opcional)</label>
+            <input id="wfName" placeholder="Dual · Webhook Router (Launcher)">
+          </div>
+        </div>
+        <div class="grid" style="grid-auto-flow:column;gap:8px;margin-top:8px">
+          <button class="btn" id="btnWfFetch">⇩ Importar (URL)</button>
+          <button class="btn" id="btnWfFile">⇩ Importar (Arquivo)</button>
+          <button class="btn" id="btnWfGen">⇪ Gerar n8n JSON preenchido</button>
+          <button class="btn ok" id="btnWfSend">🚀 Enviar para n8n (API)</button>
+        </div>
+        <div class="fld" style="margin-top:8px">
+          <label>Pré-visualização</label>
+          <textarea id="wfPreview" placeholder="JSON aparecerá aqui…"></textarea>
+        </div>
+        <div class="badge" style="margin-top:8px">
+          Observação: algumas instâncias n8n exigem CORS liberado para o domínio do app.
+          Se o navegador bloquear a requisição, use um proxy ou envie via painel do n8n.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer>Do seu jeito. Sempre único, sempre seu.</footer>
+</div>
+
+<!-- CodeMirror 6 for Editor -->
+<script type="module">
+  import {EditorState} from "https://esm.sh/@codemirror/state@6";
+  import {EditorView, keymap, highlightActiveLine} from "https://esm.sh/@codemirror/view@6";
+  import {defaultKeymap, history, historyKeymap} from "https://esm.sh/@codemirror/commands@6";
+  import {html} from "https://esm.sh/@codemirror/lang-html@6";
+  import {oneDark} from "https://esm.sh/@codemirror/theme-one-dark@6";
+
+  const $ = (s, c=document)=>c.querySelector(s);
+  const tabs = [...document.querySelectorAll('.tab')];
+  const subtabs = [...document.querySelectorAll('.subtab')];
+  function selTab(name){ tabs.forEach(t=>t.classList.toggle('sel', t.dataset.tab===name));
+    $('#pane-editor').style.display = name==='editor'?'block':'none';
+    $('#pane-nebula').style.display = name==='nebula'?'block':'none';
+    $('#pane-conns').style.display = name==='conns'?'block':'none'; }
+  tabs.forEach(t=> t.onclick = ()=> selTab(t.dataset.tab));
+  function selSub(name){ subtabs.forEach(t=>t.classList.toggle('sel', t.dataset.stab===name));
+    ['endpoints','credenciais','voiceids','workflow'].forEach(x=> $('#stab-'+x).style.display = (x===name)?'block':'none'); }
+  subtabs.forEach(t=> t.onclick = ()=> selSub(t.dataset.stab));
+
+  // ---------- Shared state ----------
+  const S = {
+    mode: localStorage.getItem('dual.mode') || 'nuvem',
+    n8n: localStorage.getItem('dual.n8n') || '',
+    srv: localStorage.getItem('dual.srv') || '',
+    audio: localStorage.getItem('dual.audio') || '',
+    theme: localStorage.getItem('dual.theme') || 'dark',
+    pages: JSON.parse(localStorage.getItem('dual.pages')||'[]'),
+    current: null, safe: false,
+    cred: {
+      eleven: localStorage.getItem('dual.cred.eleven') || '',
+      deepgram: localStorage.getItem('dual.cred.deepgram') || ''
+    },
+    voice: JSON.parse(localStorage.getItem('dual.voice')||'{}'),
+    wf: null
+  };
+  document.documentElement.setAttribute('data-theme', S.theme);
+
+  // ---------- Endpoints UI ----------
+  $('#iMode').value = S.mode; $('#iN8n').value = S.n8n; $('#iSrv').value = S.srv; $('#iAudioUrl').value = S.audio;
+  const log3 = (tag,val)=>{ const el=$('#console3'); const d=document.createElement('div'); d.className='line';
+    d.innerHTML = `<span class="tag">${tag}</span><span class="val">${typeof val==='string'?val:JSON.stringify(val,null,2)}</span>`; el.appendChild(d); el.scrollTop=el.scrollHeight; };
+  $('#btnSaveConns').onclick = ()=>{
+    S.mode = $('#iMode').value; S.n8n = $('#iN8n').value.trim(); S.srv = $('#iSrv').value.trim(); S.audio = $('#iAudioUrl').value.trim();
+    localStorage.setItem('dual.mode', S.mode); localStorage.setItem('dual.n8n', S.n8n); localStorage.setItem('dual.srv', S.srv); localStorage.setItem('dual.audio', S.audio);
+    log3('SAVE','Conectores salvos');
+  };
+  $('#btnResetConns').onclick = ()=>{
+    ['dual.mode','dual.n8n','dual.srv','dual.audio'].forEach(k=>localStorage.removeItem(k));
+    S.mode='nuvem'; S.n8n=''; S.srv=''; S.audio=''; $('#iMode').value=S.mode; $('#iN8n').value=S.n8n; $('#iSrv').value=S.srv; $('#iAudioUrl').value=S.audio;
+    log3('RESET','Conectores limpos');
+  };
+  $('#btnPing').onclick = async()=>{
+    if(S.n8n){
+      try{ const test = S.n8n.replace('/webhook/dual','/webhook/test'); const r = await fetch(test,{method:'GET'}); log3('PING n8n', r.status); }catch(e){ log3('PING n8n','falha');}
+    } else log3('PING n8n','vazio');
+    if(S.srv){
+      try{ const test = S.srv.replace('/api/dual','/api/ping'); const r = await fetch(test,{method:'GET'}); log3('PING srv', r.status); }catch(e){ log3('PING srv','falha');}
+    } else log3('PING srv','vazio');
+  };
+
+  // ---------- Credenciais ----------
+  $('#credEleven').value = S.cred.eleven; $('#credDeepgram').value = S.cred.deepgram;
+  $('#btnSaveCreds').onclick = ()=>{
+    S.cred.eleven = $('#credEleven').value.trim();
+    S.cred.deepgram = $('#credDeepgram').value.trim();
+    localStorage.setItem('dual.cred.eleven', S.cred.eleven);
+    localStorage.setItem('dual.cred.deepgram', S.cred.deepgram);
+    log3('SAVE','Credenciais salvas');
+  };
+  $('#btnClearCreds').onclick = ()=>{
+    localStorage.removeItem('dual.cred.eleven'); localStorage.removeItem('dual.cred.deepgram');
+    S.cred.eleven=''; S.cred.deepgram=''; $('#credEleven').value=''; $('#credDeepgram').value='';
+    log3('RESET','Credenciais limpas');
+  };
+
+  // ---------- Voice IDs ----------
+  const voices = ["Nova","Elysha","Kaion","Ignyra","Luxara","Atlas","Artemis","Serena","Vitalis","Aion","Genus","Rhea"];
+  const vg = $('#voiceGrid');
+  voices.forEach(v=>{
+    const w = document.createElement('div'); w.className='fld';
+    w.innerHTML = `<label>${v} — voice_id</label><input data-k="${v}" placeholder="Cole o voice_id para ${v}">`;
+    vg.appendChild(w);
+  });
+  voices.forEach(v=>{ const el = vg.querySelector(`input[data-k="${v}"]`); if(S.voice[v]) el.value = S.voice[v]; });
+  $('#btnSaveVoice').onclick = ()=>{
+    S.voice = voices.reduce((acc,v)=>{ acc[v] = vg.querySelector(`input[data-k="${v}"]`).value.trim(); return acc; }, {});
+    localStorage.setItem('dual.voice', JSON.stringify(S.voice));
+    log3('SAVE','Voice IDs salvos');
+  };
+  $('#btnClearVoice').onclick = ()=>{
+    localStorage.removeItem('dual.voice'); S.voice={}; voices.forEach(v=> vg.querySelector(`input[data-k="${v}"]`).value=''); log3('RESET','Voice IDs limpos');
+  };
+
+  // ---------- Workflow (import/generate/send) ----------
+  $('#btnWfFetch').onclick = async()=>{
+    const url = $('#wfUrl').value.trim(); if(!url) return;
+    try{ const r = await fetch(url); const j = await r.json(); S.wf = j; $('#wfPreview').value = JSON.stringify(j,null,2); log3('WF','importado via URL'); }
+    catch(e){ log3('WF','falha URL'); alert('Falha ao importar URL'); }
+  };
+  $('#btnWfFile').onclick = async()=>{
+    const inp = $('#wfFile'); const f = inp.files && inp.files[0]; if(!f) return;
+    try{ const text = await f.text(); const j = JSON.parse(text); S.wf = j; $('#wfPreview').value = JSON.stringify(j,null,2); log3('WF','importado via arquivo'); }
+    catch(e){ log3('WF','falha arquivo'); alert('Falha ao importar arquivo'); }
+  };
+  $('#btnWfGen').onclick = ()=>{
+    const filled = genWorkflow(S);
+    S.wf = filled;
+    $('#wfPreview').value = JSON.stringify(filled, null, 2);
+    log3('WF','gerado no Launcher');
+  };
+  $('#btnWfSend').onclick = async()=>{
+    try{
+      let wf = S.wf || genWorkflow(S);
+      const name = $('#wfName').value.trim(); if(name){ wf.name = name; }
+      const base = $('#apiBase').value.trim().replace(/\/+$/,''); // remove trailing slash
+      if(!base){ alert('Defina a Base URL da API do n8n (ex.: https://seu-n8n/rest)'); return; }
+      const method = $('#authMethod').value;
+      const token = $('#apiKey').value.trim();
+      const headers = {'Content-Type':'application/json'};
+      if(method==='apiKey'){ headers['X-N8N-API-KEY'] = token; }
+      else { headers['Authorization'] = 'Bearer '+token; }
+      // POST /rest/workflows
+      const url = base + '/workflows';
+      const res = await fetch(url, {method:'POST', headers, body: JSON.stringify(wf)});
+      const data = await res.json().catch(()=>({}));
+      log3('WF SEND', {status: res.status, data});
+      if(!res.ok){
+        alert('Falha ao enviar. Veja console.');
+      }else{
+        alert('Workflow criado no n8n!');
+      }
+    }catch(e){
+      log3('WF SEND ERROR', e.message);
+      alert('Erro ao enviar. Cheque CORS/autenticação.');
+    }
+  };
+
+  function genWorkflow(S){
+    // monta JSON mínimo com credenciais/voice ids e ramos TTS/RAG/MISSAO/ASR
+    const makeVoiceMap = () => {
+      let lines = voices.map(v=>`  '${v}': item.VOICE_${v}`).join(',\n');
+      return `// Mapear arquétipo → voiceId
+const a = item.arquetipo || item.archetype || 'Nova';
+const m = {
+${lines}
+};
+item.voiceId = m[a] || m['Nova'];
+return item;`;
+    };
+    const wf = {
+      name: "Dual · Webhook Router (HTTP) — v3 Launcher",
+      nodes: [
+        {"parameters":{"httpMethod":"POST","path":"dual","options":{"responseData":"lastNode","responseCode":200}},
+         "id":"Webhook","name":"Webhook","type":"n8n-nodes-base.webhook","typeVersion":1,"position":[260,300]},
+        {"parameters":{"propertyName":"={{$json[\"intencao\"]}}","rules":[
+          {"operation":"equal","value":"TTS"},{"operation":"equal","value":"RAG"},
+          {"operation":"equal","value":"MISSAO"},{"operation":"equal","value":"ASR"}]},
+         "id":"Switch","name":"Switch (INTENÇÃO)","type":"n8n-nodes-base.switch","typeVersion":1,"position":[500,300]},
+        {"parameters":{"keepOnlySet":True,"values":{"string":[{"name":"__secret_elevenlabs","value": S.cred.eleven}]}},
+         "id":"SecretsTTS","name":"Set (Secrets · TTS)","type":"n8n-nodes-base.set","typeVersion":2,"position":[740,120]},
+        {"parameters":{"keepOnlySet":True,"values":{"string": voices.map(v=>({"name":"VOICE_"+v,"value": S.voice[v] or ""}))}},
+         "id":"SetVoiceIDs","name":"Set (Voice IDs por Arquétipo)","type":"n8n-nodes-base.set","typeVersion":2,"position":[940,40]},
+        {"parameters":{"functionCode": makeVoiceMap()},
+         "id":"VoiceMap","name":"Function Item (VoiceMap)","type":"n8n-nodes-base.functionItem","typeVersion":1,"position":[1160,120]},
+        {"parameters":{"method":"POST","url":"={{'https://api.elevenlabs.io/v1/text-to-speech/' + $json[\"voiceId\"]}}",
+          "jsonParameters":True,"options":{"response":{"responseFormat":"file","download":True,"binaryPropertyName":"data"}},
+          "headerParametersUi":{"parameters":[{"name":"xi-api-key","value":"={{$json[\"__secret_elevenlabs\"]}}"}]},
+          "bodyParametersJson":"={{ {\"text\": $json[\"input\"][\"texto\"] || \"\", \"model_id\": \"eleven_multilingual_v2\", \"voice_settings\": {\"stability\":0.5, \"similarity_boost\":0.7} } }}"
+         },"id":"HTTP_TTS","name":"HTTP Request (ElevenLabs TTS)","type":"n8n-nodes-base.httpRequest","typeVersion":4,"position":[1400,120]},
+        {"parameters":{"keepOnlySet":True,"values":{"string":[
+          {"name":"type","value":"ok"},{"name":"route","value":"TTS"},{"name":"archetype","value":"={{$json[\"arquetipo\"]}}"},
+          {"name":"text","value":"={{$json[\"input\"][\"texto\"]}}"},
+          {"name":"audioUrl","value":"={{'data:audio/mpeg;base64,' + $binary.data.data}}"}]}},
+         "id":"SetTTSUnified","name":"Set → TTS (unificado)","type":"n8n-nodes-base.set","typeVersion":2,"position":[1640,120]},
+        {"parameters":{"keepOnlySet":True,"values":{"string":[
+          {"name":"type","value":"ok"},{"name":"route","value":"RAG"},
+          {"name":"archetype","value":"={{$json[\"arquetipo\"]}}"},
+          {"name":"text","value":"={{\"[\"+$json[\"arquetipo\"]+\"] Resposta citada (demo) para: \"+($json[\"input\"][\"texto\"]||\"pergunta\")}}"}],
+          "json":[{"name":"sources","value":"={ [{\"title\":\"Demo Cap. 03\",\"page\":15}] }"}]}},
+         "id":"SetRAG","name":"Set → RAG (unificado)","type":"n8n-nodes-base.set","typeVersion":2,"position":[740,300]},
+        {"parameters":{"keepOnlySet":True,"values":{"string":[
+          {"name":"type","value":"ok"},{"name":"route","value":"MISSAO"},
+          {"name":"archetype","value":"={{$json[\"arquetipo\"]}}"},{"name":"text","value":"Missão pronta."}],
+          "json":[{"name":"mission","value":"={ {\"title\":\"Respiração 3-6-9\",\"seconds\":45,\"steps\":[\"Inspira 3\",\"Segura 6\",\"Expira 9\"]} }"}]}},
+         "id":"SetMISSAO","name":"Set → MISSAO (unificado)","type":"n8n-nodes-base.set","typeVersion":2,"position":[740,460]},
+        {"parameters":{"keepOnlySet":True,"values":{"string":[{"name":"__secret_deepgram","value": S.cred.deepgram}]}},
+         "id":"SecretsASR","name":"Set (Secrets · ASR)","type":"n8n-nodes-base.set","typeVersion":2,"position":[740,600]},
+        {"parameters":{"method":"POST","url":"https://api.deepgram.com/v1/listen?model=nova-2","jsonParameters":True,
+          "headerParametersUi":{"parameters":[{"name":"Authorization","value":"={{'Token ' + $json[\"__secret_deepgram\"]}}"},{"name":"Content-Type","value":"application/json"}]},
+          "bodyParametersJson":"={{ {\"url\": $json[\"input\"][\"arquivoUrl\"] || \"\"} }}"
+         },"id":"HTTP_ASR","name":"HTTP Request (Deepgram ASR)","type":"n8n-nodes-base.httpRequest","typeVersion":4,"position":[960,600]},
+        {"parameters":{"functionCode":"const dg = items[0].json || {}; let transcript=''; try{ transcript = dg.results.channels[0].alternatives[0].transcript || '';}catch(e){} return [{ json:{ transcript } }];"},
+         "id":"ExtractASR","name":"Function (Extract ASR)","type":"n8n-nodes-base.function","typeVersion":1,"position":[1180,600]},
+        {"parameters":{"keepOnlySet":True,"values":{"string":[
+          {"name":"type","value":"ok"},{"name":"route","value":"ASR"},
+          {"name":"archetype","value":"={{$json[\"arquetipo\"] || \"Nova\"}}"},{"name":"text","value":"={{$json[\"transcript\"]}}"}]}},
+         "id":"SetASRUnified","name":"Set → ASR (unificado)","type":"n8n-nodes-base.set","typeVersion":2,"position":[1420,600]},
+        {"parameters":{"responseBody":"={{$json}}","responseCode":200},
+         "id":"Respond","name":"Respond to Webhook","type":"n8n-nodes-base.respondToWebhook","typeVersion":1,"position":[1840,300]}
+      ],
+      connections: {
+        "Webhook":{"main":[[{"node":"Switch (INTENÇÃO)","type":"main","index":0}]]},
+        "Switch (INTENÇÃO)":{"main":[
+          [{"node":"Set (Secrets · TTS)","type":"main","index":0}],
+          [{"node":"Set → RAG (unificado)","type":"main","index":0}],
+          [{"node":"Set → MISSAO (unificado)","type":"main","index":0}],
+          [{"node":"Set (Secrets · ASR)","type":"main","index":0}]
+        ]},
+        "Set (Secrets · TTS)":{"main":[[{"node":"Set (Voice IDs por Arquétipo)","type":"main","index":0}]]},
+        "Set (Voice IDs por Arquétipo)":{"main":[[{"node":"Function Item (VoiceMap)","type":"main","index":0}]]},
+        "Function Item (VoiceMap)":{"main":[[{"node":"HTTP Request (ElevenLabs TTS)","type":"main","index":0}]]},
+        "HTTP Request (ElevenLabs TTS)":{"main":[[{"node":"Set → TTS (unificado)","type":"main","index":0}]]},
+        "Set → TTS (unificado)":{"main":[[{"node":"Respond to Webhook","type":"main","index":0}]]},
+        "Set → RAG (unificado)":{"main":[[{"node":"Respond to Webhook","type":"main","index":0}]]},
+        "Set → MISSAO (unificado)":{"main":[[{"node":"Respond to Webhook","type":"main","index":0}]]},
+        "Set (Secrets · ASR)":{"main":[[{"node":"HTTP Request (Deepgram ASR)","type":"main","index":0}]]},
+        "HTTP Request (Deepgram ASR)":{"main":[[{"node":"Function (Extract ASR)","type":"main","index":0}]]},
+        "Function (Extract ASR)":{"main":[[{"node":"Set → ASR (unificado)","type":"main","index":0}]]},
+        "Set → ASR (unificado)":{"main":[[{"node":"Respond to Webhook","type":"main","index":0}]]}
+      },
+      active: False
+    };
+    return wf;
+  }
+
+  // ---------- Editor (CodeMirror) ----------
+  let view;
+  const tabsPages = $('#tabsPages');
+  const preview = $('#preview');
+  function savePages(){ localStorage.setItem('dual.pages', JSON.stringify(S.pages)); }
+  function renderPageTabs(){
+    tabsPages.innerHTML='';
+    S.pages.forEach(p=>{
+      const el=document.createElement('div'); el.className='tab'+(p.id===S.current?' sel':'');
+      el.innerHTML = `📄 ${p.name}`; el.onclick=()=> selectPage(p.id);
+      tabsPages.appendChild(el);
+    });
+  }
+  function selectPage(id){
+    S.current=id; renderPageTabs();
+    const page=S.pages.find(p=>p.id===id); if(!page) return;
+    loadEditor(page.content); renderPreview();
+  }
+  function newPage(name){
+    const id=crypto.randomUUID();
+    const content = `<!doctype html>
+<html lang="pt-br">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>${name}</title></head>
+<body><h1>${name}</h1><p>Edite aqui…</p></body></html>`;
+    S.pages.push({id,name,content,ts:Date.now()}); savePages(); selectPage(id);
+  }
+  function loadEditor(text){
+    if(view) view.destroy();
+    const state = EditorState.create({
+      doc:text, extensions:[ keymap.of([...defaultKeymap, ...historyKeymap]), history(), highlightActiveLine(), html(), oneDark,
+        EditorView.updateListener.of(v=>{
+          if(v.docChanged){ const page=S.pages.find(p=>p.id===S.current); page.content=v.state.doc.toString(); page.ts=Date.now(); savePages(); schedulePreview(); }
+        })
+      ]
+    });
+    view = new EditorView({state, parent:$('#cm')});
+  }
+  let tmr; function schedulePreview(){ clearTimeout(tmr); tmr=setTimeout(renderPreview, 400); }
+  function stripScripts(html){
+    try{ const doc=new DOMParser().parseFromString(html,'text/html'); doc.querySelectorAll('script').forEach(s=>s.remove()); doc.querySelectorAll('*').forEach(el=>[...el.attributes].forEach(a=>/^on/i.test(a.name)&&el.removeAttribute(a.name))); return "<!doctype html>\n"+doc.documentElement.outerHTML; }
+    catch(e){ return html; }
+  }
+  function renderPreview(){
+    const page=S.pages.find(p=>p.id===S.current); if(!page) return;
+    const html = S.safe? stripScripts(page.content): page.content;
+    const doc = preview.contentWindow.document; doc.open(); doc.write(html); doc.close();
+  }
+  $('#btnNew').onclick = ()=> newPage('pagina-'+(S.pages.length+1)+'.html');
+  $('#btnUpload').onclick = ()=> $('#fileInput').click();
+  $('#fileInput').onchange = async (e)=>{ for(const f of [...e.target.files]){ const txt=await f.text(); S.pages.push({id:crypto.randomUUID(), name:f.name, content:txt, ts:Date.now()}); } savePages(); if(S.pages[0]) selectPage(S.pages.at(-1).id); };
+  $('#btnFetch').onclick = async()=>{
+    const url = prompt('Cole a URL (suporta user/repo/path@branch p/ GitHub raw):'); if(!url) return;
+    let u=url.trim();
+    if(/^[^\/\s]+\/[^\/\s]+\/.+@[^\/\s]+$/.test(u)){ const [user,repo,rest]=u.split('/',3); const [path,branch]=rest.split('@'); u=`https://raw.githubusercontent.com/${user}/${repo}/${path}?plain=1#${branch}`; }
+    try{ const r=await fetch(u); const txt=await r.text(); const name=(url.split('/').pop()||'remote.html').split('?')[0]; S.pages.push({id:crypto.randomUUID(), name, content:txt, ts:Date.now()}); savePages(); selectPage(S.pages.at(-1).id); }
+    catch(e){ alert('Falha ao buscar'); }
+  };
+  $('#btnSave').onclick = ()=> savePages();
+  $('#btnExport').onclick = ()=>{ const page=S.pages.find(p=>p.id===S.current); if(!page) return; const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([page.content], {type:'text/html'})); a.download=page.name; a.click(); };
+  $('#btnSafe').onclick = ()=>{ S.safe=!S.safe; $('#badgeMode').textContent = S.safe?'Safe Preview: scripts OFF':'Live Preview: scripts ON'; $('#btnSafe').textContent = S.safe?'🛡 Safe (ON)':'🛡 Safe (OFF)'; renderPreview(); };
+  $('#btnFull').onclick = ()=> $('#previewWrap').requestFullscreen && $('#previewWrap').requestFullscreen();
+
+  // Nebula shared
+  const icons = [...document.querySelectorAll('#icons .ico')];
+  let ARCH = localStorage.getItem('dual.arch') || 'Nova';
+  function pick(a){ ARCH=a; localStorage.setItem('dual.arch', ARCH); icons.forEach(i=>i.classList.toggle('sel', i.dataset.name===ARCH)); }
+  icons.forEach(i=> i.onclick=()=> pick(i.dataset.name)); pick(ARCH);
+  const logNeb = (tag,val)=>{ const el=$('#console2'); const d=document.createElement('div'); d.className='line'; d.innerHTML = `<span class="tag">${tag}</span><span class="val">${typeof val==='string'?val:JSON.stringify(val,null,2)}</span>`; el.appendChild(d); el.scrollTop=el.scrollHeight; };
+  function payload(){
+    return { intencao: $('#iIntent').value, arquetipo: ARCH, origem: $('#iIntent').value==='ASR'?'voz':'texto',
+      modo: S.mode==='local'?'Local':(S.mode==='nuvem'?'Nuvem':'Neural'), destino:'PWA', memoria:['Estado 78K'],
+      input:{ texto: $('#iText').value.trim(), arquivoUrl:S.audio, params:{ bpm:86, escala:'432Hz', sens:1.4 } },
+      device:{ ua:navigator.userAgent, ios:/iPhone|iPad|iPod/.test(navigator.userAgent), android:/Android/.test(navigator.userAgent) },
+      ui:{ unoDualTrinity: $('#iUDT').value } };
+  }
+  async function callNuvem(data){ if(!S.n8n) throw new Error('Defina o Endpoint n8n em Conectores'); const r=await fetch(S.n8n,{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)}); return r.json();}
+  async function callNeural(data){ if(!S.srv) throw new Error('Defina o Endpoint Servidor em Conectores'); const r=await fetch(S.srv,{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)}); return r.json();}
+  let pyLoaded=false; async function ensurePy(){ if(pyLoaded) return true; try{ if(!window.loadPyodide){ const s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js'; document.head.appendChild(s); await new Promise(res=>s.onload=res); } window._py=await loadPyodide(); pyLoaded=true; return true; }catch(e){ return false; } }
+  async function callLocal(data){ await ensurePy(); return {type:'ok', route:data.intencao, archetype:data.arquetipo, text:`[${data.arquetipo}] ${data.input.texto||'(local)'}`}; }
+  function renderOut(resp){ $('#out2').innerHTML = '<pre style="white-space:pre-wrap">'+(resp.text||'(sem texto)')+'</pre>'; if(resp.audioUrl){ const a=new Audio(resp.audioUrl); a.play().catch(()=>{});} }
+  $('#btnTheme').onclick = ()=>{ S.theme = (document.documentElement.getAttribute('data-theme')==='dark')?'purple':'dark'; localStorage.setItem('dual.theme', S.theme); document.documentElement.setAttribute('data-theme', S.theme); $('#badgeTheme').textContent='Tema: '+(S.theme==='dark'?'Dark':'Purple'); };
+  $('#btnRun').onclick = async()=>{ const data=payload(); logNeb('SEND', data); try{ let resp; if(S.mode==='nuvem') resp=await callNuvem(data); else if(S.mode==='neural') resp=await callNeural(data); else resp=await callLocal(data); logNeb('RECV', resp); renderOut(resp);}catch(e){ logNeb('ERROR', e.message); renderOut({text:'Falha na execução.'}); } };
+  $('#badgeMode2').textContent = 'Modo: '+(S.mode==='local'?'Local (WASM)':(S.mode==='nuvem'?'Nuvem (n8n)':'Neural (Servidor)'));
+
+  // Initialize UI
+  selTab('editor'); selSub('endpoints');
+
+  // SW
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js').catch(()=>{}); }
+</script>
+</html>
