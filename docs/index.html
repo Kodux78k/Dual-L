@@ -6551,20 +6551,5 @@ document.getElementById('orbWrap')?.addEventListener('click', function(){ try{ w
       ctx.fillStyle=PALETTE.dust; ctx.globalAlpha=0.75; ctx.beginPath(); ctx.arc(x,y,p.size,0,Math.PI*2); ctx.fill(); } ctx.globalAlpha=1;
     requestAnimationFrame(draw); } requestAnimationFrame(draw);
 })();
-</script> <style id="uno-superpatch-css">
-/* === SUPER PATCH — estilos necessários === */
-/* Tabbar glass + alinhamento */
-.tabbar .inner{ background: rgba(255,255,255,.06) !important; border:1px solid rgba(255,255,255,.14) !important; backdrop-filter: blur(10px) !important; }
-.tabbar .tab svg { display:block; margin:0 auto 2px }
-/* Header icon button alignment */
-header.mast .ib svg{ display:block }
-/* Archetype overlay por trás de tudo e sem capturar cliques */
-#archOverlay, .arch-overlay, [data-arch-overlay], body::after, .arch-ring, .arch-overlay::before {
-  z-index: 0 !important;
-  pointer-events: none !important;
-}
-.view, header.mast, .tabbar, #lsModal { position: relative; z-index: 1 }
-/* Pequeno ajuste do LS modal dentro do glass theme */
-#lsModal .panel{ backdrop-filter: blur(8px) }
-</style>
+</script>
 </body></html>
