@@ -2585,7 +2585,7 @@ html, body { overscroll-behavior-y: contain; }
       const name = (localStorage.getItem('infodose:userName') || '').trim();
       const sessions = document.querySelectorAll('.session').length;
       if (!name) {
-        showArchMessage('Salve! Ative sua Dual Infodose registrando seu nome na seção Brain.', 'warn');
+        showArchMessage('⚡️! Ative sua Dual Infodose registrando seu nome na seção Brain.', 'warn');
       } else {
         showArchMessage(`Bem-vindo de volta, ${name}. UNO está ao seu lado. Você tem ${sessions} sessão(ões) ativa(s).`, 'ok');
       }
@@ -2672,7 +2672,7 @@ html, body { overscroll-behavior-y: contain; }
       function populateVoices() {
         let voices = speechSynthesis.getVoices();
         // Filtrar por idiomas suportados (Português e Inglês) se disponível
-        const filtered = voices.filter(v => v.lang && (v.lang.startsWith('pt') || v.lang.startsWith('en')));
+        const filtered = voices.filter(v => v.lang && (v.lang.startsWith('pt') || v.lang.startsWith('pt-br')));
         voices = filtered.length ? filtered : voices;
         const saved = LS.get('infodose:voices', {}) || {};
         // Se ainda não houver vozes salvas, defina um mapeamento padrão
