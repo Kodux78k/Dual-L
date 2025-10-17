@@ -3,10 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Lumine · Tri-Ring (ASCII-ONLY orbits)</title>
+<title>Lumine · Fallback Fusion (ASCII · No-CDN)</title>
 <style>
   :root {
     --color: #e5e7eb;
+    --bg: transparent;
     --r1: min(38vmin, 260px);
     --r2: min(29vmin, 200px);
     --r3: min(20vmin, 140px);
@@ -16,7 +17,6 @@
     --font2: clamp(11px, 2.6vmin, 20px);
     --font3: clamp(10px, 2.2vmin, 18px);
     --faceSize: clamp(30px, 10vmin, 76px);
-    --bg: transparent;
   }
   * { box-sizing: border-box; }
   html, body { margin:0; padding:0; width:100%; height:100%; background: var(--bg); }
@@ -30,15 +30,30 @@
   }
   .stage { position:relative; width:min(86vmin, 580px); height:min(86vmin, 580px); }
 
-  .halo {
+  .dna-circle {
     position:absolute; left:50%; top:50%;
     transform: translate(-50%,-50%);
-    width: 78%; height: 78%;
-    border: 1px solid color-mix(in oklab, var(--color) 35%, transparent);
+    width: 74%; height: 74%;
     border-radius: 50%;
-    opacity: .18;
+    border: 2px dashed color-mix(in oklab, var(--color) 85%, transparent);
+    opacity: .9;
+    animation: spin 12s linear infinite;
     z-index: 1;
   }
+  @keyframes spin { from { transform: translate(-50%,-50%) rotate(0deg);} to { transform: translate(-50%,-50%) rotate(360deg);} }
+
+  .primary-orbit {
+    position:absolute; left:50%; top:50%;
+    width:0; height:0; transform-origin: 0 0;
+    animation: orbit 4s linear infinite;
+    z-index: 2;
+  }
+  .primary-glyph {
+    position:absolute; transform: translateX(calc(0.5 * 74%));
+    font-size: clamp(12px, 3vmin, 20px);
+    text-shadow: 0 0 0.25em color-mix(in oklab, var(--color) 70%, transparent);
+  }
+  @keyframes orbit { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }
 
   .ring { position:absolute; inset:0; transform-origin: 50% 50%; z-index:2; }
   .r1 { animation: rotCW var(--speed1) linear infinite; }
@@ -60,7 +75,6 @@
     position:absolute; inset:0;
     display:flex; flex-direction:column;
     align-items:center; justify-content:center;
-    gap: 1.2vmin;
     z-index:3; pointer-events:none; text-align:center;
   }
   .face {
@@ -68,9 +82,9 @@
     font-size: var(--faceSize); line-height:1;
     filter: drop-shadow(0 0 0.25rem color-mix(in oklab, var(--color) 65%, transparent));
     letter-spacing: 0.02em;
+    animation: pulse 3s ease-in-out infinite;
   }
-  .face-pulse { animation: fp 3.0s ease-in-out infinite; }
-  @keyframes fp { 0%,100%{ transform: scale(1); } 50%{ transform: scale(1.06); } }
+  @keyframes pulse { 0%,100%{ transform: scale(1);} 50%{ transform: scale(1.06);} }
 
   .safe .r1 { animation-duration: 120s; }
   .safe .r2 { animation-duration: 100s; }
@@ -79,14 +93,16 @@
     .r1 { animation-duration: 140s; }
     .r2 { animation-duration: 120s; }
     .r3 { animation-duration: 100s; }
+    .face { animation: none; }
   }
-
-  #gl-overlay { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:0; }
 </style>
 <script>
   (function() {
     try {
       var q = new URLSearchParams(location.search);
+      if (q.get('bg') === 'dark') {
+        document.documentElement.style.setProperty('--bg', '#0b1e3b');
+      }
       if (q.get('safe') === '1' || q.get('safe') === 'true') {
         document.documentElement.classList.add('safe');
       }
@@ -100,12 +116,12 @@
 </script>
 </head>
 <body>
-  <div class="stage" role="img" aria-label="Animação ritual com três anéis ASCII (100% ASCII) e face central animada do arquétipo Lumine" data-arch="lumine">
-    <canvas id="gl-overlay"></canvas>
-    <div class="halo" aria-hidden="true"></div>
-
-    <div class="ring r1">
-      <span class="g1" style="--a:calc(0 * (360deg / 11));--d:0.00s">=</span>
+  <div class="stage" role="img" aria-label="Animação ritual com três anéis ASCII, círculo tracejado girando e face central animada do arquétipo Lumine" data-arch="lumine">
+    <div class="dna-circle" aria-hidden="true"></div>
+    <div class="primary-orbit" aria-hidden="true">
+      <span class="primary-glyph">=</span>
+    </div>
+    <div class="ring r1"><span class="g1" style="--a:calc(0 * (360deg / 11));--d:0.00s">=</span>
       <span class="g1" style="--a:calc(1 * (360deg / 11));--d:0.10s">|</span>
       <span class="g1" style="--a:calc(2 * (360deg / 11));--d:0.20s">-</span>
       <span class="g1" style="--a:calc(3 * (360deg / 11));--d:0.30s">+</span>
@@ -115,10 +131,8 @@
       <span class="g1" style="--a:calc(7 * (360deg / 11));--d:0.70s">+</span>
       <span class="g1" style="--a:calc(8 * (360deg / 11));--d:0.80s">=</span>
       <span class="g1" style="--a:calc(9 * (360deg / 11));--d:0.90s">|</span>
-      <span class="g1" style="--a:calc(10 * (360deg / 11));--d:1.00s">-</span>
-    </div>
-    <div class="ring r2">
-      <span class="g2" style="--a:calc(0 * (360deg / 9));--d:0.00s">|</span>
+      <span class="g1" style="--a:calc(10 * (360deg / 11));--d:1.00s">-</span></div>
+    <div class="ring r2"><span class="g2" style="--a:calc(0 * (360deg / 9));--d:0.00s">|</span>
       <span class="g2" style="--a:calc(1 * (360deg / 9));--d:0.10s">=</span>
       <span class="g2" style="--a:calc(2 * (360deg / 9));--d:0.20s">-</span>
       <span class="g2" style="--a:calc(3 * (360deg / 9));--d:0.30s">|</span>
@@ -126,26 +140,19 @@
       <span class="g2" style="--a:calc(5 * (360deg / 9));--d:0.50s">-</span>
       <span class="g2" style="--a:calc(6 * (360deg / 9));--d:0.60s">|</span>
       <span class="g2" style="--a:calc(7 * (360deg / 9));--d:0.70s">=</span>
-      <span class="g2" style="--a:calc(8 * (360deg / 9));--d:0.80s">-</span>
-    </div>
-    <div class="ring r3">
-      <span class="g3" style="--a:calc(0 * (360deg / 7));--d:0.00s">=</span>
+      <span class="g2" style="--a:calc(8 * (360deg / 9));--d:0.80s">-</span></div>
+    <div class="ring r3"><span class="g3" style="--a:calc(0 * (360deg / 7));--d:0.00s">=</span>
       <span class="g3" style="--a:calc(1 * (360deg / 7));--d:0.10s">-</span>
       <span class="g3" style="--a:calc(2 * (360deg / 7));--d:0.20s">=</span>
       <span class="g3" style="--a:calc(3 * (360deg / 7));--d:0.30s">-</span>
       <span class="g3" style="--a:calc(4 * (360deg / 7));--d:0.40s">=</span>
       <span class="g3" style="--a:calc(5 * (360deg / 7));--d:0.50s">-</span>
-      <span class="g3" style="--a:calc(6 * (360deg / 7));--d:0.60s">=</span>
-    </div>
-
-    <div class="center">
-      <span class="face face-pulse" id="face"></span>
-    </div>
+      <span class="g3" style="--a:calc(6 * (360deg / 7));--d:0.60s">=</span></div>
+    <div class="center"><span class="face" id="face"></span></div>
   </div>
 
 <script>
 (function(){
-  // Center ASCII frames
   var frames = ["<>", "[]", "| |"];
   var face = document.getElementById('face');
   var idx = 0;
@@ -154,94 +161,7 @@
   var base = 520;
   var q = new URLSearchParams(location.search);
   var SAFE = (q.get('safe')==='1' || q.get('safe')==='true' || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches));
-  var interval = setInterval(tick, SAFE ? base*2 : base);
-
-  // Optional 3D overlay (unchanged)
-  if (!SAFE) {
-    function loadScript(src) {
-      return new Promise(function(res, rej){
-        var s = document.createElement('script'); s.src = src; s.async = true;
-        s.onload = function(){ res(); }; s.onerror = function(){ rej(new Error('CDN load failed')); };
-        document.head.appendChild(s);
-      });
-    }
-    var CDN = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js';
-    loadScript(CDN).then(function(){
-      if (!window.THREE) return;
-      var THREE = window.THREE;
-      var canvas = document.getElementById('gl-overlay');
-      var renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
-      var dpr = Math.max(1, window.devicePixelRatio || 1); renderer.setPixelRatio(dpr);
-      var scene = new THREE.Scene();
-      var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100); camera.position.z = 6;
-
-      function resize() {
-        var stage = document.querySelector('.stage');
-        var w = stage.clientWidth || window.innerWidth;
-        var h = stage.clientHeight || window.innerHeight;
-        renderer.setSize(w, h, false);
-        camera.aspect = w / h; camera.updateProjectionMatrix();
-      }
-      window.addEventListener('resize', resize); resize();
-
-      var N1=11, N2=9, N3=7, total=N1+N2+N3;
-      var positions=new Float32Array(total*3), sizes=new Float32Array(total), angles=new Float32Array(total), speeds=new Float32Array(total), radii=new Float32Array(total);
-
-      var idxp=0;
-      function ring(count,R,base){
-        for (var i=0;i<count;i++){
-          var t=i/count;
-          angles[idxp]=t*Math.PI*2;
-          speeds[idxp]=base*(0.9+Math.random()*0.2);
-          radii[idxp]=R;
-          sizes[idxp]=6.0 + Math.random()*3.0;
-          idxp++;
-        }
-      }
-      var elemEll = {"water":0.9,"wood":0.75,"fire":0.65,"earth":0.5,"metal":0.6}['metal'];
-      var elemSpeed = {"water":0.8,"wood":1.0,"fire":1.4,"earth":0.6,"metal":1.1}['metal'];
-      ring(N1, 2.1, 0.005*elemSpeed); ring(N2, 1.6, -0.007*elemSpeed); ring(N3, 1.15, 0.010*elemSpeed);
-
-      var geom=new THREE.BufferGeometry();
-      geom.setAttribute('position', new THREE.BufferAttribute(positions,3));
-      geom.setAttribute('size', new THREE.BufferAttribute(sizes,1));
-
-      var vs=`
-        attribute float size;
-        void main(){
-          vec4 mv = modelViewMatrix * vec4(position,1.0);
-          gl_PointSize = size * (300.0 / -mv.z);
-          gl_Position = projectionMatrix * mv;
-        }
-      `;
-      var fs=`
-        void main(){
-          vec2 uv = gl_PointCoord - vec2(0.5);
-          float d = length(uv);
-          float alpha = smoothstep(0.5, 0.0, d);
-          gl_FragColor = vec4(0.898039, 0.905882, 0.921569, alpha);
-        }
-      `;
-      var mat=new THREE.ShaderMaterial({vertexShader:vs,fragmentShader:fs,blending:THREE.AdditiveBlending,transparent:true,depthWrite:false});
-      var points=new THREE.Points(geom,mat); scene.add(points);
-
-      // ASCII rings are DOM-based; WebGL only adds subtle points/lines
-      function updatePositions(t){
-        var k=0;
-        for (var i=0;i<total;i++){
-          angles[i]+=speeds[i]; var a=angles[i], R=radii[i];
-          positions[k++]=Math.cos(a)*R;
-          positions[k++]=Math.sin(a)*R*elemEll;
-          positions[k++]=0.0;
-          sizes[i]+=(Math.sin(t*2.0+i)*0.05);
-        }
-        geom.setAttribute('position', new THREE.BufferAttribute(positions,3));
-        geom.setAttribute('size', new THREE.BufferAttribute(sizes,1));
-      }
-      function animate(){ var t=performance.now()*0.001; updatePositions(t); renderer.render(scene,camera); requestAnimationFrame(animate); }
-      animate();
-    }).catch(function(){});
-  }
+  setInterval(tick, SAFE ? base*2 : base);
 })();
 </script>
 </body>
