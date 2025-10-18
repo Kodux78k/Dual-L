@@ -1615,6 +1615,8 @@ try{ document.documentElement.style.setProperty('--arch-overlay','rgba(64,158,25
     <div class="title">
       <h1>HUB UNO</h1>
       <small>Dual · Trinity</small>
+      <!-- PATCH: Badge indicating 78K is active; hidden by default -->
+      <span id="badge78k" style="display:none;margin-left:8px;font-size:0.75rem;color:#f5f7ff;" title="78K ativo">⚡ 78K ativo</span>
     </div>
     <button class="ib fx-trans fx-press ring" id="btnDownload" title="Baixar HTML">
 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -1723,7 +1725,20 @@ try{ document.documentElement.style.setProperty('--arch-overlay','rgba(64,158,25
   <polyline points="15 18 9 12 15 6" stroke="url(#g5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
             <span class="ripple"></span></button>
-            <select id="arch-select" title="Escolher arquétipo"><option value="./archetypes3d/value="./archetypes3d/atlas.html">atlas.html</option><option value="./archetypes3d/value="./archetypes3d/nova.html">nova.html</option><option value="./archetypes3d/value="./archetypes3d/vitalis.html">vitalis.html</option><option value="./archetypes3d/value="./archetypes3d/pulse.html">pulse.html</option><option value="./archetypes3d/value="./archetypes3d/artemis.html">artemis.html</option><option value="./archetypes3d/value="./archetypes3d/serena.html">serena.html</option><option value="./archetypes3d/value="./archetypes3d/kaos.html">kaos.html</option><option value="./archetypes3d/value="./archetypes3d/genus.html">genus.html</option><option value="./archetypes3d/value="./archetypes3d/lumine.html">lumine.html</option><option value="./archetypes3d/value="./archetypes3d/rhea.html">rhea.html</option><option value="./archetypes3d/value="./archetypes3d/solus.html">solus.html</option><option value="./archetypes3d/value="./archetypes3d/aion.html">aion.html</option></select>
+            <select id="arch-select" title="Escolher arquétipo">
+  <option value="./archetypes/atlas.html">atlas.html</option>
+  <option value="./archetypes/nova.html">nova.html</option>
+  <option value="./archetypes/vitalis.html">vitalis.html</option>
+  <option value="./archetypes/pulse.html">pulse.html</option>
+  <option value="./archetypes/artemis.html">artemis.html</option>
+  <option value="./archetypes/serena.html">serena.html</option>
+  <option value="./archetypes/kaos.html">kaos.html</option>
+  <option value="./archetypes/genus.html">genus.html</option>
+  <option value="./archetypes/lumine.html">lumine.html</option>
+  <option value="./archetypes/rhea.html">rhea.html</option>
+  <option value="./archetypes/solus.html">solus.html</option>
+  <option value="./archetypes/aion.html">aion.html</option>
+</select>
             <button class="btn fx-trans fx-press ring" id="arch-next" title="Próximo">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
 
@@ -2332,7 +2347,7 @@ try{ document.documentElement.style.setProperty('--arch-overlay','rgba(64,158,25
           <div class="card fx-trans fx-lift" style="display:block">
             <div style="font-weight:800">Logs</div>
             <div class="mut" style="font-size:11px;margin-bottom:4px">Eventos recentes</div>
-            <pre id="logs" style="margin:0;font:12px/1.4 ui-monospace,monospace;color:var(--mut);max-height:140px;overflow:auto"></pre>
+            <pre id="logs" style="margin:0;font:12px/1.4 ui-monospace,monospace;color:var(--mut);max-height:140px;overflow:auto;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere"></pre>
           </div>
           </div>
       </div>
@@ -2679,15 +2694,23 @@ try{ document.documentElement.style.setProperty('--arch-overlay','rgba(64,158,25
           LS.set('infodose:voices', saved);
         }
         archList.forEach(name => {
+          // Cria um acordeão (detalhes) para cada arquétipo. O nome sem extensão aparece no cabeçalho.
+          const detailsEl = document.createElement('details');
+          detailsEl.className = 'voice-accordion';
+          const summary = document.createElement('summary');
+          const baseName = name.replace(/\.html$/i, '');
+          summary.textContent = baseName.charAt(0).toUpperCase() + baseName.slice(1);
+          summary.style.cursor = 'pointer';
+          summary.style.fontWeight = '700';
+          summary.style.marginBottom = '4px';
+          detailsEl.appendChild(summary);
+          // Contêiner para o seletor de voz e botão de teste
           const row = document.createElement('div');
           row.style.display = 'flex';
           row.style.alignItems = 'center';
           row.style.gap = '8px';
           row.style.flexWrap = 'wrap';
-          const label = document.createElement('span');
-          label.textContent = name;
-          label.style.minWidth = '70px';
-          label.style.fontWeight = '700';
+          // Seletor de voz
           const sel = document.createElement('select');
           sel.className = 'input ring';
           sel.style.maxWidth = '220px';
@@ -2702,23 +2725,26 @@ try{ document.documentElement.style.setProperty('--arch-overlay','rgba(64,158,25
             saved[name] = sel.value;
             LS.set('infodose:voices', saved);
           };
+          // Botão de teste
           const btnTest = document.createElement('button');
           btnTest.className = 'btn fx-trans fx-press ring';
           btnTest.textContent = 'Teste';
-          const rp = document.createElement('span'); rp.className = 'ripple'; btnTest.appendChild(rp);
+          const rp = document.createElement('span');
+          rp.className = 'ripple';
+          btnTest.appendChild(rp);
           addRipple(btnTest);
           btnTest.onclick = () => {
-            const utter = new SpeechSynthesisUtterance(`Olá, eu sou ${name}`);
+            const utter = new SpeechSynthesisUtterance(`Olá, eu sou ${baseName}`);
             const voiceName = saved[name] || sel.value;
             const voice = voices.find(v => v.name === voiceName);
             if (voice) utter.voice = voice;
             speechSynthesis.cancel();
             speechSynthesis.speak(utter);
           };
-          row.appendChild(label);
           row.appendChild(sel);
           row.appendChild(btnTest);
-          wrap.appendChild(row);
+          detailsEl.appendChild(row);
+          wrap.appendChild(detailsEl);
         });
       }
       populateVoices();
@@ -5475,6 +5501,8 @@ main .row > * + * { margin-top: .5rem; }
         <label for="lsImportFile" style="display:inline-block"><button type="button">Importar</button></label>
         <input id="lsImportFile" type="file" accept="application/json" hidden>
         <button id="lsClearDisabled">Limpar desativados</button>
+        <!-- PATCH: Toggle 78K within LS Panel -->
+        <button id="lsToggle78k" aria-pressed="false" title="Ativar/Desativar estado 78K">⚡ 78K: OFF</button>
         <button id="lsClose">Fechar</button>
       </div>
     </div>
@@ -6896,133 +6924,112 @@ push('assistant','Pronto','<p>Chat 13-Blocos iniciado. Escreva sua intenção e 
   const hash=location.hash.replace('#','').trim(); if(hash) setArch(hash);
 })();
 </script>
-
-<!-- === UNO • ArchOrb Integration: Tabs, Theme & Voices === -->
-<script id="UNO_ARCH_ORB_INTEGRATION">
-(function(){
-  // 1) THEME per arquétipo (gradientes + overlay, ajustável)
-  const ARCH_THEME = {
-    atlas:  {a:'#ff52e5', b:'#00c5e5', overlay:'rgba(64,158,255,.22)'},
-    nova:   {a:'#ffd452', b:'#ff52e5', overlay:'rgba(255, 82, 229, .18)'},
-    vitalis:{a:'#39FFB6', b:'#00c5e5', overlay:'rgba(57,255,182,.16)'},
-    pulse:  {a:'#00c5e5', b:'#39FFB6', overlay:'rgba(0,197,229,.18)'},
-    artemis:{a:'#ff9e52', b:'#ffd452', overlay:'rgba(255, 158, 82, .18)'},
-    serena: {a:'#8aa3ff', b:'#39FFB6', overlay:'rgba(138,163,255,.18)'},
-    kaos:   {a:'#ff52e5', b:'#d800d8', overlay:'rgba(216,0,216,.20)'},
-    genus:  {a:'#52ffcf', b:'#52a5ff', overlay:'rgba(82,165,255,.18)'},
-    lumine: {a:'#ffd452', b:'#fff4a8', overlay:'rgba(255,212,82,.16)'},
-    solus:  {a:'#a8ffea', b:'#39FFB6', overlay:'rgba(168,255,234,.16)'},
-    aion:   {a:'#52a5ff', b:'#00c5e5', overlay:'rgba(82,165,255,.18)'},
-    rhea:   {a:'#52ffd4', b:'#8aa3ff', overlay:'rgba(138,163,255,.16)'}
-  };
-
-  function applyTheme(id){
-    const t = ARCH_THEME[id] || ARCH_THEME.atlas;
-    const root = document.documentElement;
-    root.style.setProperty('--grad-a', t.a);
-    root.style.setProperty('--grad-b', t.b);
-    if (t.overlay) root.style.setProperty('--arch-overlay', t.overlay);
-    document.body.setAttribute('data-arch', id);
-  }
-
-  // 2) TAB / STACK hookup (genérico)
-  // Use [data-arch] em botões/abas, ou href="#arch-<id>"
-  function handleArchTrigger(ev){
-    const el = ev.target.closest('[data-arch], a[href^="#arch-"]');
-    if(!el) return;
-    ev.preventDefault();
-    const id = (el.getAttribute('data-arch') || el.getAttribute('href').replace('#arch-','')).toLowerCase();
-    if(!id) return;
-    if (window.ArchOrb && window.ArchOrb.set) window.ArchOrb.set(id);
-    applyTheme(id);
-    persist(id);
-    speakArch(id); // voz
-    // Toggle visual de aba ativa (se existir container .tabs/.tabbar)
-    try {
-      const bar = el.closest('.tabs, .tabbar, nav, .stack-tabs');
-      if(bar){
-        bar.querySelectorAll('.active').forEach(n=>n.classList.remove('active'));
-        el.classList.add('active');
-      }
-    } catch {}
-  }
-  document.addEventListener('click', handleArchTrigger, true);
-
-  // 3) Persistência simples
-  const KEY = 'uno:arch:selected';
-  function persist(id){ try{ localStorage.setItem(KEY, id); }catch{} }
-  function restore(){
-    let id = location.hash.startsWith('#') ? location.hash.slice(1) : '';
-    if(!id){ try{ id = localStorage.getItem(KEY) || ''; }catch{} }
-    if(id){
-      if (window.ArchOrb && window.ArchOrb.set) window.ArchOrb.set(id);
-      applyTheme(id);
-    }
-  }
-
-  // 4) VOZES — mapeamento por arquétipo (ajustável)
-  // Observação: nomes exatos de vozes variam por sistema. Usamos "hints" (locale/nome).
-  const ARCH_VOICE_HINTS = {
-    // Do seu mapa: Atlas=Daniel, Nova=Joana, Serena=Luciana-PT, Rhea=Luciana, Aion=Shelley, Genus=Grandpa, Lumine=Flo,
-    // Kaion=Eddy (não está nos 12, mantido aqui caso use), Kaos=Reed, Horus=Sandy (não ícone), Elysha=Moira (não ícone).
-    atlas:  ['Daniel','en-GB','en_GB'],
-    nova:   ['Joana','pt-PT','pt_PT'],
-    serena: ['Luciana','pt-BR','pt_BR','pt'],
-    rhea:   ['Luciana','pt-BR','pt_BR','pt'],
-    aion:   ['Shelley','en-US','en_US'],
-    genus:  ['Grandpa','en-US','en_US','en'],
-    lumine: ['Flo','en-US','en_US','en'],
-    kaos:   ['Reed','en-US','en_US','en'],
-    // Pedidos: Pulse=francês masculino; Artemis=italiano masculino
-    pulse:  ['fr','FR','Thomas','Paul','Male','France'],
-    artemis:['it','IT','Luca','Paolo','Male','Italy'],
-    vitalis:['es','ES','Miguel','Diego','es-'],
-    solus:  ['en','en-US','en-GB','Neutral']
-  };
-  let VOICES = [];
-  function loadVoices(){
-    VOICES = (window.speechSynthesis ? speechSynthesis.getVoices() : []) || [];
-  }
-  if('speechSynthesis' in window){
-    loadVoices();
-    window.speechSynthesis.onvoiceschanged = loadVoices;
-  }
-  function pickVoice(hints){
-    if(!VOICES.length || !hints) return null;
-    const lower = s => (s||'').toLowerCase();
-    // score simples: soma de matches por hint em name/lang
-    let best = null, bestScore = -1;
-    for(const v of VOICES){
-      const n = lower(v.name), l = lower(v.lang);
-      let score = 0;
-      for(const h of hints){
-        const hh = lower(h);
-        if(n.includes(hh)) score += 2;
-        if(l.includes(hh)) score += 3;
-      }
-      if(score > bestScore){ best = v; bestScore = score; }
-    }
-    return best;
-  }
-  function speakArch(id){
-    if(!('speechSynthesis' in window)) return;
-    const u = new SpeechSynthesisUtterance();
-    const label = id.charAt(0).toUpperCase()+id.slice(1);
-    u.text = label;
-    const v = pickVoice(ARCH_VOICE_HINTS[id]);
-    if(v) u.voice = v;
-    // velocidade suave pro HUD
-    u.rate = 1; u.pitch = 1; u.volume = 1;
-    try { speechSynthesis.cancel(); } catch {}
-    speechSynthesis.speak(u);
-  }
-
-  // 5) Inicialização
-  document.addEventListener('DOMContentLoaded', restore);
-})();
-</script>
-<!-- === /UNO • ArchOrb Integration === -->
-
 <!-- === /UNO • ORB dos Arquétipos (Injected) === -->
 
+<script id="BOOT_ORDER_ORCHESTRATOR">
+(function(){
+  // Deduplicate style/script tags by id and ensure final patch order
+  try{
+    const ORDER = [
+      'blue1Theme','customStyle','multiagent-styles','patch-blue1-theme',
+      'overlay-defaults','ls-panel-css','show-app-title-css',
+      'overlay-css-unify','overlay-guardian-css','orb-slot-css',
+      'hdpro-override','ATOM_UI_PATCH','OVERLAY_BG_ONLY','ARCH_FAB_ROUND_FIX'
+    ];
+    const seen = new Set();
+    // Remove duplicate style/script tags with same id (keep last)
+    ['style','script'].forEach(tag=>{
+      const els = Array.from(document.querySelectorAll(tag+'[id]'));
+      for (let i=0;i<els.length;i++){
+        const id = els[i].id;
+        const dups = els.filter(e=>e.id===id);
+        if (dups.length>1){
+          dups.slice(0, -1).forEach(x=>x.parentNode && x.parentNode.removeChild(x));
+        }
+      }
+    });
+    // Re-append in canonical order near end of HEAD to lock cascade
+    const head = document.head || document.querySelector('head');
+    if (head){
+      ORDER.forEach(id=>{
+        const el = document.getElementById(id);
+        if (el) head.appendChild(el);
+      });
+    }
+  }catch(e){}
+
+  // Service Worker updater (only when using external sw.js)
+  if ('serviceWorker' in navigator){
+    window.addEventListener('load', async () => {
+      try{
+        const reg = await navigator.serviceWorker.register('./sw.js', {scope:'./'});
+        // Ask for update check on load
+        try{ reg.update(); }catch{}
+        // Auto-reload on new SW activation (once)
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', function(){
+          if (refreshing) return; refreshing = true; location.reload();
+        });
+        // If there's a waiting worker, tell it to skipWaiting
+        if (reg.waiting){
+          reg.waiting.postMessage({type:'SKIP_WAITING'});
+        }
+        // Listen for waiting in future
+        reg.addEventListener('updatefound', () => {
+          const nw = reg.installing;
+          nw && nw.addEventListener('statechange', () => {
+            if (nw.state === 'installed' && navigator.serviceWorker.controller){
+              nw.postMessage({type:'SKIP_WAITING'});
+            }
+          });
+        });
+        // Handle message from SW
+        navigator.serviceWorker.addEventListener('message', evt => {
+          if (evt && evt.data && evt.data.type === 'RELOAD') location.reload();
+        });
+      }catch(e){/* ignore */}
+    });
+  }
+})();
+</script>
+  <!-- PATCH: 78K toggle for LS Panel and badge -->
+  <script id="patch-ls-toggle-78k">
+  (function(){
+    const LSKEY='dual.state.78k';
+    function isOn(){ return !!localStorage.getItem(LSKEY); }
+    function setUI(on){
+      const lsBtn=document.getElementById('lsToggle78k');
+      if(lsBtn){
+        lsBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        lsBtn.textContent = on ? '⚡ 78K: ON' : '⚡ 78K: OFF';
+        if(lsBtn.classList) lsBtn.classList.toggle('prime', !!on);
+      }
+      const badge=document.getElementById('badge78k');
+      if(badge){
+        badge.style.display = on ? 'inline' : 'none';
+      }
+    }
+    function enable(){
+      localStorage.setItem(LSKEY,'1');
+      try{ if(window.Ativar78K) window.Ativar78K(); }catch(e){}
+      setUI(true);
+    }
+    function disable(){
+      localStorage.removeItem(LSKEY);
+      try{ document.documentElement.style.removeProperty('--arch-overlay'); }catch(e){}
+      setUI(false);
+    }
+    function toggle(){ isOn() ? disable() : enable(); }
+    document.addEventListener('DOMContentLoaded', function(){
+      const btn=document.getElementById('lsToggle78k');
+      if(btn){ btn.addEventListener('click', function(){ toggle(); }); }
+      setUI(isOn());
+    });
+    window.addEventListener('storage', function(ev){
+      if(ev.key===LSKEY){
+        setUI(!!ev.newValue);
+      }
+    });
+  })();
+  </script>
 </body></html>
