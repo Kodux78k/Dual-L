@@ -1288,6 +1288,8 @@ body::after{content:'';position:fixed;inset:0;background:var(--arch-overlay, tra
 <style id="show-app-title-css">.app-title{display:inline-flex;align-items:center;gap:6px}</style>
 
 <!-- PATCH: overlay-css-unify -->
+<style id="arch-fade-speed">:root{--arch-switch-fade:280ms}</style>
+
 <style id="overlay-css-unify">
 /* Ensure overlay rendering is unified across variants */
 body::after{
@@ -1593,19 +1595,16 @@ try{ document.documentElement.style.setProperty('--arch-overlay','rgba(64,158,25
 </style>
 </head>
 <body>
-<!-- Nebula · Sincronia Planetária (compact) -->
-<nebula-dashboard data-compact style="margin:12px 10px"></nebula-dashboard>
-<script type="module" src="js/nebula-dashboard.js"></script>
-<script type="module" src="js/infodose-bridge.js"></script>
-<script type="module">
-(function(){
-  const r = document.documentElement;
-  if(!getComputedStyle(r).getPropertyValue('--neb-bg1')){
-    r.style.setProperty('--neb-bg1','#0B1630'); r.style.setProperty('--neb-text','#E8F1F2');
-    r.style.setProperty('--radius-lg','20px'); r.style.setProperty('--neb-muted','#A3B2C2');
-  }
-})();
-</script>
+  <!-- Splash overlay (UNO loader) -->
+<div id="appSplash" aria-live="polite" role="status">
+  <div class="kob-orb">
+    <div class="asst-left"></div>
+    <div class="asst-right"></div>
+    <div class="kob-ring"></div>
+    <div class="kob-spiral">UNO</div>
+  </div>
+  <div class="loading-text">Sincronizando Nebula Pro Blue One…</div>
+</div>
 
   <!-- Splash screen displayed on initial load -->
   
@@ -1779,7 +1778,7 @@ try{ document.documentElement.style.setProperty('--arch-overlay','rgba(64,158,25
               <div class="call" id="orbCall">·</div>
             </div>
 
-            <iframe id="arch-frame" title="Archetype Core" sandbox="allow-scripts" referrerpolicy="no-referrer" src="./archetypes/atlas.html"></iframe>
+            <iframe id="arch-frame" title="Archetype Core" sandbox="allow-forms allow-modals allow-popups allow-scripts" referrerpolicy="no-referrer" src="./archetypes/atlas.html"></iframe>
           </div>
           <!-- Mensagem de feedback aparece fora da bolinha, logo abaixo dela -->
           <div id="archMsg" class="arch-msg show" style="background: rgba(57, 255, 182, 0.75); color: rgb(11, 15, 20);">Bem-vindo de volta, KODUX. UNO está ao seu lado.</div>
@@ -2552,7 +2551,7 @@ try{ document.documentElement.style.setProperty('--arch-overlay','rgba(64,158,25
   <script>
   // Redefine the global toast function to suppress popup messages. If you
   // later decide to re-enable notifications, remove or comment out this line.
-  window.toast = function(){};
+  /* toast no-op removido para habilitar notificações */
     /* ===================== Helpers ===================== */
     const $ = (q, r = document) => r.querySelector(q);
     const $$ = (q, r = document) => Array.from(r.querySelectorAll(q));
