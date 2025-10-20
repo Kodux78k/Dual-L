@@ -1593,6 +1593,20 @@ try{ document.documentElement.style.setProperty('--arch-overlay','rgba(64,158,25
 </style>
 </head>
 <body>
+<!-- Nebula · Sincronia Planetária (compact) -->
+<nebula-dashboard data-compact style="margin:12px 10px"></nebula-dashboard>
+<script type="module" src="js/nebula-dashboard.js"></script>
+<script type="module" src="js/infodose-bridge.js"></script>
+<script type="module">
+(function(){
+  const r = document.documentElement;
+  if(!getComputedStyle(r).getPropertyValue('--neb-bg1')){
+    r.style.setProperty('--neb-bg1','#0B1630'); r.style.setProperty('--neb-text','#E8F1F2');
+    r.style.setProperty('--radius-lg','20px'); r.style.setProperty('--neb-muted','#A3B2C2');
+  }
+})();
+</script>
+
   <!-- Splash screen displayed on initial load -->
   
   <!-- Som do splash: coloque seu arquivo de áudio na pasta especificada e ajuste o caminho abaixo.
