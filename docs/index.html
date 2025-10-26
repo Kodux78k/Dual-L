@@ -2306,6 +2306,49 @@ input[type="file"]::file-selector-button:hover{
   box-shadow: var(--focus-ring, 0 0 0 3px rgba(57,255,182,.18));
 }
 </style>
+
+<style id="arch-pulse-css">
+/* === PATCH • Pulse per Archetype ===============================
+   As cores do "pulso de recepção" são controladas por variáveis:
+   --pulse-main, --pulse-soft, --pulse-glow, --pulse-label
+   O JS atualiza estas variáveis quando o arquétipo muda.
+   =============================================================== */
+:root{
+  --pulse-main: #ffd54f;   /* fallback (lumine-like) */
+  --pulse-soft: rgba(255,213,79,.24);
+  --pulse-glow: rgba(255,213,79,.18);
+  --pulse-label: #f3e7c1;
+}
+
+/* Chat pulse (barra animada no Chat 13) usa o gradiente do pulso */
+#chatPulse{
+  background: linear-gradient(90deg, color-mix(in oklab, var(--pulse-main) 80%, #ffffff 0%), color-mix(in oklab, var(--pulse-main) 40%, transparent 60%));
+}
+#chatPulse::after{
+  /* brilho que corre sobre o gradiente */
+  background: radial-gradient(60% 120% at 0% 50%, #fff8 0%, #fff0 60%);
+}
+
+/* CTA circular "Toque o pulso" dentro do orbe — harmonizado por arquétipo */
+.pulse-cta .label{
+  color: var(--pulse-label) !important;
+}
+.pulse-cta .dot{
+  box-shadow: 0 0 28px var(--pulse-glow), inset 0 0 18px rgba(255,255,255,.12);
+}
+.pulse-cta .dot::before,
+.pulse-cta .dot::after{
+  border-color: var(--pulse-soft);
+}
+
+/* Opcional: halo do orbe responde sutilmente ao pulso */
+.arch-circle .orb-glow{
+  background: radial-gradient(60% 60% at 50% 50%,
+              color-mix(in oklab, var(--pulse-main) 18%, transparent) 0%,
+              color-mix(in oklab, var(--arch-overlay, rgba(0,0,0,0)) 60%, transparent) 45%,
+              rgba(0,0,0,0) 70%);
+}
+</style>
 </head>
 <body data-theme="blue1">
 <!-- Splash screen displayed on initial load -->
@@ -8560,6 +8603,55 @@ window.kobDemo = () => pushAI(`[INTRO] **Kael Dominus** — núcleo sentiente qu
   }
 })();
 
+</script>
+
+<script id="arch-pulse-js">
+/* === PATCH • Pulse Theme per Archetype ===============================
+   Atualiza variáveis CSS do "pulso de recepção" conforme o arquétipo ativo.
+   ===================================================================== */
+(function(){
+  // Paleta por arquétipo (cores consistentes com overlay/brand do sistema)
+  const PULSE = {
+    atlas:  { main:'#409EFF', soft:'rgba(64,158,255,.24)', glow:'rgba(64,158,255,.18)', label:'#d9ecff' },
+    nova:   { main:'#FF52B1', soft:'rgba(255,82,177,.24)', glow:'rgba(255,82,177,.18)', label:'#ffe0f0' },
+    vitalis:{ main:'#34D399', soft:'rgba(52,211,153,.24)', glow:'rgba(52,211,153,.18)', label:'#dff6eb' },
+    pulse:  { main:'#00BFFF', soft:'rgba(0,191,255,.24)',  glow:'rgba(0,191,255,.18)',  label:'#dbf3ff' },
+    artemis:{ main:'#FFC300', soft:'rgba(255,195,0,.24)',  glow:'rgba(255,195,0,.18)',  label:'#fff2cc' },
+    serena: { main:'#B684FF', soft:'rgba(182,132,255,.24)',glow:'rgba(182,132,255,.18)',label:'#efe4ff' },
+    kaos:   { main:'#FF4D6D', soft:'rgba(255,77,109,.24)', glow:'rgba(255,77,109,.18)', label:'#ffe1e6' },
+    genus:  { main:'#22C55E', soft:'rgba(34,197,94,.24)',  glow:'rgba(34,197,94,.18)',  label:'#dcfbe8' },
+    lumine: { main:'#FFD54F', soft:'rgba(255,213,79,.24)', glow:'rgba(255,213,79,.18)', label:'#fff3cf' },
+    rhea:   { main:'#00D1B2', soft:'rgba(0,209,178,.24)',  glow:'rgba(0,209,178,.18)',  label:'#d9fbf4' },
+    solus:  { main:'#6495ED', soft:'rgba(100,149,237,.24)',glow:'rgba(100,149,237,.18)',label:'#e2ecff' },
+    aion:   { main:'#FF9F43', soft:'rgba(255,159,67,.24)', glow:'rgba(255,159,67,.18)', label:'#ffe7d3' },
+    default:{ main:'#FFD54F', soft:'rgba(255,213,79,.24)', glow:'rgba(255,213,79,.18)', label:'#f3e7c1' }
+  };
+  function setPulseTheme(arch){
+    const key = String(arch||'').toLowerCase();
+    const c = PULSE[key] || PULSE.default;
+    const rt = document.documentElement;
+    rt.style.setProperty('--pulse-main', c.main);
+    rt.style.setProperty('--pulse-soft', c.soft);
+    rt.style.setProperty('--pulse-glow', c.glow);
+    rt.style.setProperty('--pulse-label', c.label);
+  }
+  // Hook: decorar applyArchOverlay para também trocar o pulso
+  (function hook(){
+    const orig = window.applyArchOverlay;
+    window.applyArchOverlay = function(name){
+      try { if (typeof orig === 'function') orig.apply(this, arguments); } catch(e){}
+      try { setPulseTheme(name); } catch(e){}
+    };
+  })();
+  // Aplicar uma vez no boot com o arquétipo atual
+  document.addEventListener('DOMContentLoaded', function(){
+    try{
+      const sel = document.getElementById('arch-select');
+      const base = (sel?.value || '').replace(/\.html$/i,'');
+      setPulseTheme(base || 'default');
+    }catch(_){}
+  });
+})();
 </script>
 </body>
 </html>
