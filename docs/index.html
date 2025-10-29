@@ -2447,6 +2447,102 @@ input[type="file"]::file-selector-button:hover{
   }
 </style>
 
+
+<style>
+/* 78K · Dual Strip (main + fusion) */
+.ledstrip-wrap{ position: relative; margin: 5px 12px 0 12px; }
+#ledstrip-78k{
+  --archA:#409eff; --archB:#ff52b1;
+  position: relative; height: 7px; border-radius: 999px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.14);
+  overflow: hidden; isolation: isolate;
+}
+/* Pulsating borders for archetypes */
+#ledstrip-78k::before, #ledstrip-78k::after{
+  content:""; position:absolute; left:0; right:0; height:1px; pointer-events:none;
+  filter: drop-shadow(0 0 6px rgba(255,255,255,.35));
+  animation: archPulse 2.6s ease-in-out infinite;
+}
+#ledstrip-78k::before{ top:0;    background: linear-gradient(90deg,var(--archA), rgba(255,255,255,0)); }
+#ledstrip-78k::after { bottom:0; background: linear-gradient(90deg,var(--archB), rgba(255,255,255,0)); animation-delay: .9s; }
+@keyframes archPulse{
+  0%,100%{ opacity:.45 }
+  50%{ opacity:.95 }
+}
+
+/* lanes (status) */
+#ledstrip-78k .lane{
+  position:absolute; inset:0;
+  width:0%; height:100%;
+  pointer-events:none;
+  transition: width .25s cubic-bezier(.2,.7,.2,1);
+}
+#ledstrip-78k .lane.eng{  background: linear-gradient(90deg,#39ffb6,#00d4ff); mix-blend-mode: screen; opacity:.9; }
+#ledstrip-78k .lane.hr{   background: linear-gradient(90deg,#4b6fff,#00c2ff); mix-blend-mode: screen; opacity:.75; }
+#ledstrip-78k .lane.loop{ background: linear-gradient(90deg,#ffb86b,#ffd773); mix-blend-mode: screen; opacity:.55; }
+#ledstrip-78k .lane.qa{   background: linear-gradient(90deg,#ff52e5,#d800d8); mix-blend-mode: screen; opacity:.0; width:0%; transition: opacity .6s ease, width .25s ease; }
+
+/* ticks */
+#ledstrip-78k .tick{ position:absolute; top:0; bottom:0; width:1px; background: rgba(255,255,255,.16); opacity:.6 }
+#ledstrip-78k .t25{ left:25% } .t50{ left:50% } .t75{ left:75% }
+
+/* spark */
+#ledstrip-78k .spark{
+  position:absolute; top:0; bottom:0; width:2px; background:rgba(255,255,255,.9);
+  box-shadow:0 0 6px rgba(255,255,255,.85), 0 0 10px rgba(109,255,203,.7);
+  transform:translateX(-6px); opacity:0; pointer-events:none; transition: opacity .15s ease;
+}
+
+/* Fusion bar below (subtle convergence) */
+#ledstrip-fusion{
+  position: relative; height: 6px; margin-top: 6px; border-radius: 999px;
+  background: linear-gradient(90deg, var(--archA,#409eff), var(--archB,#ff52b1));
+  filter: blur(0.3px);
+  opacity:.72;
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: 0 6px 18px rgba(0,0,0,.25), 0 0 16px rgba(120,180,255,.15) inset;
+  transition: background .4s ease, opacity .4s ease;
+}
+/* Compact margin override helper (if needed) */
+.ledstrip-wrap.compact{ margin: 5px 8px 0 8px; }
+</style>
+
+<style>
+/* 78K · Strip Controls */
+.strip-controls{
+  display:flex; justify-content:flex-end; gap:8px;
+  margin: 6px 12px 0 12px;
+}
+.strip-controls .btn-fusion{
+  font:700 11px/1 ui-sans-serif,system-ui;
+  padding:8px 10px; border-radius:999px;
+  background:linear-gradient(135deg,rgba(255,255,255,.10),rgba(255,255,255,.04));
+  color:#eaf1ff; border:1px solid rgba(255,255,255,.16);
+  box-shadow:0 6px 18px rgba(0,0,0,.25);
+  -webkit-tap-highlight-color: transparent;
+}
+.strip-controls .btn-fusion:active{ transform: scale(.98); box-shadow:0 3px 10px rgba(0,0,0,.35); }
+</style>
+<style>
+/* Local Boost toast stack (bottom center) */
+#dual-toast-stack{
+  position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%);
+  display: flex; flex-direction: column; gap: 8px; z-index: 99999;
+  pointer-events: none;
+}
+.dual-toast{
+  pointer-events:auto; -webkit-tap-highlight-color: transparent;
+  background: rgba(18,20,28,.9); color: #eaf1ff;
+  border: 1px solid rgba(255,255,255,.12);
+  backdrop-filter: blur(10px);
+  padding: 10px 12px; border-radius: 12px; font: 600 12px/1.1 system-ui;
+  box-shadow: 0 8px 24px rgba(0,0,0,.4);
+  opacity: 0; transform: translateY(10px);
+  transition: opacity .25s ease, transform .25s ease;
+}
+.dual-toast.show{ opacity: 1; transform: translateY(0); }
+</style>
 </head>
 <body data-theme="blue1">
 <!-- Splash screen displayed on initial load -->
@@ -2521,6 +2617,32 @@ input[type="file"]::file-selector-button:hover{
 <span class="ripple"></span>
 </button>
 </header>
+<!-- 78K · Status Strip (fusion + pulsating borders) -->
+<div class="ledstrip-wrap">
+  <div id="ledstrip-78k" aria-hidden="false">
+    <!-- lanes -->
+    <i class="lane eng"  title="ENG"></i>
+    <i class="lane hr"   title="HR"></i>
+    <i class="lane loop" title="LOOP"></i>
+    <i class="lane qa"   title="QA"></i>
+    <!-- ticks -->
+    <i class="tick t25"></i>
+    <i class="tick t50"></i>
+    <i class="tick t75"></i>
+    <!-- spark -->
+    <i class="spark"></i>
+  </div>
+  <!-- fusion bar (sub) -->
+  <div id="ledstrip-fusion" aria-hidden="true"></div>
+<!-- 78K · Strip Controls -->
+<div class="strip-controls">
+  <button id="btn-fusionar" class="btn-fusion" type="button" aria-label="Fusionar arquétipos">
+    ✦ Fusionar
+  </button>
+</div>
+
+</div>
+
 <!-- Âncora para sessões abertas quando o usuário optar por abrir dentro da página -->
 <section id="sessionsAnchor"></section>
 <!-- Container para fundo personalizado (imagem ou vídeo).  Será preenchido via JS quando o usuário escolher
@@ -9318,5 +9440,353 @@ window.kobDemo = () => pushAI(`[INTRO] **Kael Dominus** — núcleo sentiente qu
 })();
 </script>
 <!-- === /INFODOSE • end audio engine === -->
+
+<script>
+// 78K · Dual Strip Controller (pulsating borders + fusion)
+(function(){
+  // remove old panels
+  ['led78k','led78k-micro'].forEach(id=>{ const n=document.getElementById(id); n && n.remove(); });
+
+  const main = document.getElementById('ledstrip-78k');
+  const fusion = document.getElementById('ledstrip-fusion');
+  if(!main) return;
+  const el = {
+    eng:  main.querySelector('.lane.eng'),
+    hr:   main.querySelector('.lane.hr'),
+    loop: main.querySelector('.lane.loop'),
+    qa:   main.querySelector('.lane.qa'),
+    spark:main.querySelector('.spark')
+  };
+  const state = { eng:0, hr:0, loopPct:0, qa:false, pos:0 };
+  const clamp01 = x => Math.max(0, Math.min(1, x));
+
+  // archetype color map
+  const ARCH_COLORS = {
+    nova:'#FF52B1', genus:'#52FFB1', lumine:'#B4C8FF', solus:'#DCF0FF',
+    atlas:'#409EFF', rhea:'#FFD878', kaos:'#FF4D6D', artemis:'#FF8C3C',
+    serena:'#78C8FF', aion:'#64F0FF', pulse:'#00BFFF', vitalis:'#22D392'
+  };
+  function setArchetypeColors(a,b){
+    const A = ARCH_COLORS[(a||'').toLowerCase()] || '#409eff';
+    const B = ARCH_COLORS[(b||'').toLowerCase()] || '#ff52b1';
+    main.style.setProperty('--archA', A);
+    main.style.setProperty('--archB', B);
+    fusion && (fusion.style.background = 'linear-gradient(90deg,'+A+','+B+')');
+  }
+
+  function render(){
+    if(el.eng)  el.eng.style.width  = (clamp01(state.eng/24)*100).toFixed(1) + '%';
+    if(el.hr)   el.hr.style.width   = (clamp01(state.hr/24)*100).toFixed(1) + '%';
+    if(el.loop) el.loop.style.width = (clamp01(state.loopPct)*100).toFixed(1) + '%';
+    if(el.qa) { el.qa.style.width = state.qa ? '100%' : '0%'; el.qa.style.opacity = state.qa ? .35 : 0; }
+  }
+  // decay + spark
+  setInterval(()=>{
+    state.eng = Math.max(0, state.eng - 1);
+    state.hr  = Math.max(0, state.hr  - 1);
+    state.pos = (state.pos+1)%100;
+    if(el.spark){
+      const p = (state.pos/100)*100;
+      el.spark.style.transform = 'translateX(' + p + '%)';
+      el.spark.style.opacity = (state.eng+state.hr)>0 ? .8 : .0;
+    }
+    render();
+  }, 900);
+
+  // API
+  window.LEDSTRIP = {
+    pulseENG(){ state.eng += 2; render(); },
+    pulseHR(){  state.hr  += 2; render(); },
+    setLoopPhase(name){
+      const map = { "Isca": .25, "Progresso": .50, "Tensão": .75, "Liberação": 1.0 };
+      state.loopPct = map[name] || 0;
+      render();
+    },
+    setQA(flag){ state.qa = !!flag; render(); },
+    setArchetypes(a,b){ setArchetypeColors(a,b); },
+    setCompact(flag){ const wrap = main.parentElement; if(!wrap) return; wrap.classList.toggle('compact', !!flag); }
+  };
+
+  // auto-wire minimal
+  const incENG = ()=>{ try{ LEDSTRIP.pulseENG(); }catch{} };
+  const incHR  = ()=>{ try{ LEDSTRIP.pulseHR();  }catch{} };
+  document.addEventListener('click', (e)=>{
+    const tb = e.target.closest('.tabbar .tab, [data-nav]');
+    if(tb){ incENG(); }
+  }, true);
+
+  const openAppFn = window.openApp;
+  if(typeof openAppFn === 'function'){
+    window.openApp = function(a){ incENG(); return openAppFn.apply(this, arguments); };
+  }
+  const sendUserMessageFn = window.sendUserMessage;
+  if(typeof sendUserMessageFn === 'function'){
+    window.sendUserMessage = async function(msg){ incENG(); const r = await sendUserMessageFn.apply(this, arguments); return r; };
+  }
+  const renderAssistantReplyFn = window.renderAssistantReply;
+  if(typeof renderAssistantReplyFn === 'function'){
+    window.renderAssistantReply = function(raw){ incHR(); return renderAssistantReplyFn.apply(this, arguments); };
+  }
+
+  // initial defaults
+  try{
+    const hasKey = !!(localStorage.getItem('dual.keys.openrouter')||'').trim();
+    const hasModel = !!(localStorage.getItem('infodose:model')||localStorage.getItem('dual.openrouter.model')||'').trim();
+    LEDSTRIP.setQA(hasKey && hasModel);
+
+    const sel = document.getElementById('arch-select');
+    const cur = (sel?.value || 'Atlas').replace(/\.html$/,'');
+    const idx = sel ? sel.selectedIndex : 0;
+    const nxt = sel ? (sel.options[(idx+1) % sel.options.length].value.replace(/\.html$/,'')) : 'Nova';
+    LEDSTRIP.setArchetypes(cur, nxt);
+  }catch{}
+})();
+</script>
+
+<script>
+// 78K · Fusion Ritual (button ✦ Fusionar)
+(function(){
+  const btn = document.getElementById('btn-fusionar');
+  if(!btn || !window.LEDSTRIP) return;
+  const fusionBar = document.getElementById('ledstrip-fusion');
+
+  // animate fusion gradient flow + loop advance to Liberação in ~3s
+  function fusionRitual(duration=3000){
+    try{
+      const sel = document.getElementById('arch-select');
+      const cur = (sel?.value || 'Atlas').replace(/\.html$/,'');
+      const idx = sel ? sel.selectedIndex : 0;
+      const nxt = sel ? (sel.options[(idx+1) % sel.options.length].value.replace(/\.html$/,'')) : 'Nova';
+      LEDSTRIP.setArchetypes(cur, nxt);
+    }catch{}
+
+    // staged loop advancement
+    const steps = [
+      {t: 0.00, phase:'Isca'},
+      {t: 0.33, phase:'Progresso'},
+      {t: 0.66, phase:'Tensão'},
+      {t: 1.00, phase:'Liberação'}
+    ];
+
+    const t0 = performance.now();
+    const startPos = 0; const endPos = 100;
+    const raf = (now)=>{
+      const dt = Math.min(1, (now - t0) / duration);
+      // advance loop by milestones
+      for(const s of steps){
+        if(Math.abs(dt - s.t) < 0.02){ LEDSTRIP.setLoopPhase(s.phase); }
+      }
+      // background flow animation
+      if(fusionBar){
+        fusionBar.style.backgroundSize = '200% 100%';
+        fusionBar.style.backgroundPosition = (startPos + (endPos-startPos)*dt) + '% 0%';
+        fusionBar.style.opacity = String(.62 + .28*Math.sin(dt*Math.PI));
+      }
+      if(dt < 1){ requestAnimationFrame(raf); }
+      else{
+        // settle
+        if(fusionBar){
+          fusionBar.style.backgroundSize = '';
+          fusionBar.style.backgroundPosition = '';
+          fusionBar.style.opacity = '.72';
+        }
+      }
+    };
+    requestAnimationFrame(raf);
+  }
+
+  btn.addEventListener('click', ()=>{
+    fusionRitual(3000);
+    // give some feedback
+    try{ LEDSTRIP.pulseENG(); LEDSTRIP.pulseHR(); }catch{}
+  });
+  // expose for console
+  window.LEDSTRIP && (window.LEDSTRIP.fusionRitual = fusionRitual);
+})();
+</script>
+
+<!-- PATCH: Fusionar button wiring (no toasts) -->
+
+
+<script id="dual-fusionar-patch">
+(() => {
+  const $ = (q, r=document)=>r.querySelector(q);
+  const LS = {
+    get:(k,d)=>{ try{ const v=localStorage.getItem(k); return v!=null? JSON.parse(v): d }catch(_){ return d } },
+    set:(k,v)=>{ try{ localStorage.setItem(k, JSON.stringify(v)) }catch(_){ } },
+  };
+  const COLORS = {
+    atlas:'#409EFF', nova:'#FF52B1', vitalis:'#22C55E', pulse:'#00BFFF',
+    artemis:'#FFC300', serena:'#B684FF', kaos:'#FF4D6D', genus:'#57CF70',
+    lumine:'#FFD54F', rhea:'#00D1B2', solus:'#6495ED', aion:'#FF9F43'
+  };
+  const btn = document.getElementById('btn-fusionar');
+  const bar = document.getElementById('ledstrip-fusion');
+  const stripMain = document.getElementById('ledstrip-78k');
+  const sel = $('#arch-select');
+
+  function baseName(path){ return String(path||'').replace(/^.*\//,'').replace(/\.html$/i,'').toLowerCase(); }
+  function cap(s){ return s? s[0].toUpperCase()+s.slice(1): s; }
+  function currentArch(){
+    if (!sel) return 'atlas';
+    const v = sel.value || '';
+    return baseName(v) || 'atlas';
+  }
+  function readEnabled(){ return !!LS.get('dual.fusion.enabled', false); }
+  function readPair(){ return String(LS.get('dual.fusion.pair','')||''); }
+  function writePair(p){ LS.set('dual.fusion.pair', p); }
+  function writeEnabled(v){ LS.set('dual.fusion.enabled', !!v); }
+
+  function gradientFor(a,b){
+    const ca = COLORS[a] || '#00c2ff', cb = COLORS[b] || '#ff52e5';
+    return `linear-gradient(90deg, ${ca}, ${cb})`;
+  }
+  function clearStripVisuals(){
+    if (bar){
+      bar.setAttribute('aria-hidden','true');
+      bar.style.opacity = '0';
+      bar.style.background = 'transparent';
+    }
+    if (stripMain){
+      stripMain.style.removeProperty('--archA');
+      stripMain.style.removeProperty('--archB');
+    }
+  }
+  function labelFor(enabled, pairStr){
+    if (!enabled) return '✦ Fusionar';
+    return pairStr ? `✦ Fusão: ${pairStr}` : '✦ Fusão';
+  }
+  function applyVisuals(enabled, pair){
+    btn.classList.toggle('on', !!enabled);
+    btn.textContent = labelFor(enabled, pair);
+    if (!enabled){ clearStripVisuals(); return; }
+    const [a,b] = (pair||'').split('+').map(s=>s.trim().toLowerCase());
+    if (bar){
+      bar.setAttribute('aria-hidden','false');
+      bar.style.opacity = '0.92';
+      if (a && b) bar.style.background = gradientFor(a,b);
+    }
+    if (stripMain && a && b){
+      stripMain.style.setProperty('--archA', COLORS[a] || '#409eff');
+      stripMain.style.setProperty('--archB', COLORS[b] || '#ff52b1');
+    }
+  }
+  function emitChange(enabled, pair){
+    try {
+      const [a,b] = (pair||'').split('+').map(s=>s.trim().toLowerCase());
+      window.dispatchEvent(new CustomEvent('dual:fusion-change', { detail: { enabled, pair, a, b } }));
+    } catch(_){}
+  }
+  function pickDefaultPair(){
+    const a = currentArch();
+    const order = ['atlas','nova','vitalis','pulse','artemis','serena','kaos','genus','lumine','rhea','solus','aion'];
+    const i = Math.max(0, order.indexOf(a));
+    const b = order[(i+1) % order.length];
+    return `${cap(a)}+${cap(b)}`;
+  }
+  function normalizePairName(str){
+    if (!str) return '';
+    const parts = str.split('+').map(s=>baseName(s).replace(/[^a-z]/g,''));
+    if (parts.length<2) return '';
+    return `${cap(parts[0])}+${cap(parts[1])}`;
+  }
+
+  function refreshFromLS(){
+    // ensure default OFF when absent
+    if (localStorage.getItem('dual.fusion.enabled') === null) writeEnabled(false);
+
+    let enabled = readEnabled();
+    let pair = readPair();
+
+    // If enabled and pair is missing or mismatched with current arch for slot A, realign A with current
+    if (enabled){
+      const arch = currentArch();
+      if (!pair){
+        pair = normalizePairName(pickDefaultPair());
+        writePair(pair);
+      } else {
+        const [A,B] = pair.split('+').map(s=>s.trim());
+        const aBase = baseName(A);
+        if (aBase !== arch){
+          pair = `${cap(arch)}+${B||'Nova'}`; // keep B if present
+          writePair(pair);
+        }
+      }
+    }
+
+    applyVisuals(enabled, pair);
+  }
+
+  function toggle(){
+    const enabled = !readEnabled();
+    writeEnabled(enabled);
+    if (enabled){
+      // ensure pair exists and aligns with current A
+      let pair = readPair();
+      if (!pair) pair = normalizePairName(pickDefaultPair());
+      const arch = currentArch();
+      const parts = pair.split('+').map(s=>s.trim());
+      const newPair = `${cap(baseName(arch))}+${cap(baseName(parts[1]||'Nova'))}`;
+      writePair(newPair);
+      applyVisuals(true, newPair);
+      emitChange(true, newPair);
+      // local toast hook (if defined in this page)
+      if (typeof window.dualToast === 'function') window.dualToast(`Fusão ON · ${newPair}`);
+    } else {
+      applyVisuals(false, readPair());
+      emitChange(false, readPair());
+      if (typeof window.dualToast === 'function') window.dualToast('Fusão OFF');
+    }
+  }
+
+  function init(){
+    // initial paint
+    refreshFromLS();
+    // click handler
+    btn.addEventListener('click', toggle);
+    // react to archetype select changes (only when enabled)
+    if (sel){
+      sel.addEventListener('change', () => {
+        if (!readEnabled()) return;
+        // update A slot to current arch, keep B
+        let pair = readPair();
+        const [A,B] = (pair||'').split('+').map(s=>s.trim());
+        const arch = currentArch();
+        const newPair = `${cap(baseName(arch))}+${cap(baseName(B||'Nova'))}`;
+        writePair(newPair);
+        applyVisuals(true, newPair);
+        emitChange(true, newPair);
+      });
+    }
+    // react to external changes
+    window.addEventListener('dual:fusion-change', () => refreshFromLS());
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+
+
+<div id="dual-toast-stack" aria-live="polite" aria-atomic="true"></div>
+<script>
+// Local toast (Boost) — scoped to this page only
+window.dualToast = (msg, ms=2000) => {
+  try {
+    let stack = document.getElementById('dual-toast-stack');
+    if (!stack){ stack = document.createElement('div'); stack.id='dual-toast-stack'; document.body.appendChild(stack); }
+    const el = document.createElement('div');
+    el.className = 'dual-toast';
+    el.textContent = msg;
+    stack.appendChild(el);
+    requestAnimationFrame(()=> el.classList.add('show'));
+    setTimeout(()=>{
+      el.classList.remove('show');
+      setTimeout(()=> el.remove(), 250);
+    }, ms);
+  } catch(e){ console.log('[dualToast]', e); }
+};
+</script>
+
 </body>
 </html>
