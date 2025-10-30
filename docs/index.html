@@ -9787,6 +9787,121 @@ window.dualToast = (msg, ms=2000) => {
   } catch(e){ console.log('[dualToast]', e); }
 };
 </script>
+<script>
+(function(){
+  // Mapeia sufixo (assistant) por key → para montar app_{key}_{assistant}.html
+  const SLUG = {
+    kaos:"disruptor", nova:"inspira", genus:"fabricus", pulse:"resona",
+    lumine:"brilhare", serena:"ampara", vitalis:"momentum", atlas:"cartesius",
+    artemis:"naviga",  solus:"arcana",  rhea:"raizes",   aion:"evolutia"
+  };
 
+  // ===== Config & util =====
+  const Q = new URLSearchParams(location.search);
+  const OVERRIDE = Q.get('appsBase') || localStorage.getItem('APPS78K_BASE') || '';
+  const CHANNEL  = (Q.get('channel') || localStorage.getItem('APPS78K_CHANNEL') || '').replace(/\/+$/,''); // '', 'beta', 'canary'
+  const join = (a,b) => a.replace(/\/+$/,'') + '/' + b.replace(/^\/+/,'');
+  const vtag = () => String(Date.now()); // cache-bust
+  const toast = (m,ok=true) => { const x=document.createElement('div');
+    x.style.cssText="position:fixed;left:50%;bottom:72px;transform:translateX(-50%);background:"+(ok?"rgba(18,20,28,.9)":"rgba(80,8,8,.92)")+";color:#eaf1ff;border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(10px);padding:10px 12px;border-radius:12px;font:600 12px system-ui;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:99999;opacity:0;transition:opacity .25s,transform .25s";
+    x.textContent=m; document.body.appendChild(x);
+    requestAnimationFrame(()=>{x.style.opacity=1;x.style.transform="translateX(-50%) translateY(-4px)";});
+    setTimeout(()=>{x.style.opacity=0;x.style.transform="translateX(-50%) translateY(6px)";setTimeout(()=>x.remove(),240)},1800);
+  };
+  async function exists(url){
+    try{
+      const r = await fetch(url+(url.includes('?')?'&':'?')+'v='+vtag(), {method:"HEAD", cache:"no-store", mode:"cors"});
+      return r.ok;
+    }catch(e){ return false; }
+  }
+  function filenameFor(key){ return `app_${key}_${SLUG[key]}.html`; }
+  function withChannel(base){
+    if(!CHANNEL) return base;
+    return join(base, CHANNEL + '/');
+  }
+
+  // ===== Candidatos de base (absolutos e relativos) =====
+  function candidates(){
+    const abs = [];
+    // seu usuário/repos públicos (ajuste se renomear repo):
+    abs.push("https://kodux78k.github.io/Unouno-/apps/APPS78K/");
+    abs.push("https://kodux78k.github.io/Dual-L/apps/APPS78K/");
+
+    // relativos (quando apps estão no mesmo repositório do hub)
+    const rel = ["./apps/APPS78K/","apps/APPS78K/","./docs/apps/APPS78K/","docs/apps/APPS78K/"];
+    // prioriza override, se houver
+    const list = [];
+    if (OVERRIDE) list.push(OVERRIDE);
+    list.push(...abs, ...rel);
+    // normaliza e dedup
+    return [...new Set(list)].map(b => b.replace(/\/?$/,'/'));
+  }
+
+  // ===== Pega base que realmente existe (testa Kaos como sonda) =====
+  async function pickBase(){
+    const probe = filenameFor('kaos');
+    for (const b of candidates()){
+      const base = withChannel(b);
+      if (await exists(join(base, probe))) return base;
+    }
+    return null;
+  }
+
+  // ===== Atualiza o catálogo embutido =====
+  function applyBaseToCatalog(base){
+    const tag = document.getElementById('APPS_JSON');
+    if(!tag) throw new Error("Sem <script id='APPS_JSON'>");
+    const data = JSON.parse((tag.textContent||'{}').trim());
+    if(!data || !Array.isArray(data.apps)) throw new Error("APPS_JSON.apps inválido");
+
+    const vt = vtag();
+    for (const it of data.apps){
+      const key = String(it.key||'').toLowerCase();
+      if (!key || !SLUG[key]) continue;
+      const fn = filenameFor(key);
+      it.url = join(base, fn) + '?v='+vt;
+      // Dica: se você quiser forçar ícones de outro repo, descomente:
+      // if (it.icon && !/^https?:\/\//.test(it.icon)) {
+      //   it.icon = `https://kodux78k.github.io/UNO-Assets/icons/${key}-192.png`;
+      // }
+    }
+    tag.textContent = JSON.stringify(data, null, 2);
+    window.APPS_JSON = data;
+
+    // Notifica o HUB (se existir),
+    if (typeof window.reloadCatalog === 'function') { try { window.reloadCatalog(data); } catch{} }
+
+    // Atualiza iframes já abertos (se sua UI usar .session > iframe)
+    try{
+      const map=new Map(data.apps.map(a=>[String(a.title||a.key||'').toLowerCase(), a.url]));
+      document.querySelectorAll('.session iframe').forEach(fr=>{
+        try{
+          const card=fr.closest('.session');
+          const meta=card && card.dataset && card.dataset.meta ? JSON.parse(card.dataset.meta) : null;
+          const title=(meta && meta.title ? meta.title : (card && card.querySelector('.title')?.textContent)||'').toLowerCase();
+          const u=map.get(title); if(u) fr.src=u;
+        }catch{}
+      });
+    }catch{}
+    return data;
+  }
+
+  // ===== Boot =====
+  document.addEventListener('DOMContentLoaded', async ()=>{
+    const base = await pickBase();
+    if (!base) { toast("APPS: pasta não encontrada (ajuste base/branch)", false); console.error("[APPS] Nenhuma base válida.", candidates()); return; }
+    const data = applyBaseToCatalog(base);
+    toast(OVERRIDE ? "APPS sincronizado (override)" : (CHANNEL ? "APPS sincronizado ("+CHANNEL+")" : "APPS sincronizado"));
+    console.log("[APPS] base =", base, data.apps.map(a=>a.url));
+  });
+
+  // ===== API opcional para o “App de Ativação” =====
+  window.APPS78K = {
+    setBase(url){ localStorage.setItem('APPS78K_BASE', url||''); location.reload(); },
+    setChannel(ch){ localStorage.setItem('APPS78K_CHANNEL', (ch||'').replace(/\/+$/,'')); location.reload(); },
+    clear(){ localStorage.removeItem('APPS78K_BASE'); localStorage.removeItem('APPS78K_CHANNEL'); location.reload(); }
+  };
+})();
+</script>
 </body>
 </html>
